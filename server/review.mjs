@@ -18,12 +18,13 @@ export function validateReview(value){
   if(title.length<2||title.length>16||review.length<12||review.length>220||BAD_CLAIMS.test(title+review+(monsterLine||''))||/[<>]|https?:|sk-/i.test(title+review+(monsterLine||'')))return null
   return {title,review,...(monsterLine?{monsterLine}:{}),source:'ai'}
 }
-export function createReviewService({env=process.env,fetchImpl=fetch,now=Date.now}={}){
+export function createReviewService({env=process.env,fetchImpl=fetch,now=Date.now,publicMode=false}={}){
   const cache=new Map(),attempts=[]
   const recentTitles=[]
   let day='',daily=0
   const fallback=(round,notice)=>({...localReview(round.seconds),notice})
   async function generate(round){
+    if(publicMode)return fallback(round,'公网 AI 暂未开放，当前为本地备用战报，不产生模型调用')
     if(!env.DASHSCOPE_API_KEY)return fallback(round,'未配置百炼服务，已使用本地战报')
     let base
     try{

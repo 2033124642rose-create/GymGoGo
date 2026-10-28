@@ -1,5 +1,5 @@
 import type { IncomingMessage,ServerResponse } from 'node:http'
-export function createReviewService(options?:{env?:NodeJS.ProcessEnv;fetchImpl?:typeof fetch;now?:()=>number}):{
+export function createReviewService(options?:{env?:NodeJS.ProcessEnv;fetchImpl?:typeof fetch;now?:()=>number;publicMode?:boolean}):{
   handler(req:IncomingMessage,res:ServerResponse):Promise<void>
   evaluate(input:unknown):Promise<unknown>
 }
