@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-28",
+  "test": "One real Bailian call with synthetic settlement data, not a human exercise record",
+  "upstreamCalls": 1,
+  "upstreamStatus": 403,
+  "transportError": null,
+  "result": {
+    "title": "森林破关者",
+    "review": "团子揉着眼睛翻开森林日记：今天的守门任务，被你一下一下认真打通了！把这枚萌芽徽章收好，下次冒险再见。",
+    "source": "local",
+    "notice": "AI 战报暂时未送达，已使用本地战报"
+  }
+}

@@ -29,3 +29,12 @@
 - 2026-10-28-phase3-waiting-ready.jpg：UX-004 无接触自动开局的等待就位战斗大屏，未开启摄像头，0 次 / 100HP；不代表真人倒计时或动作验收。
 
 - 2026-10-28-phase3-ready-debug.jpg：UX-005 临时就位调试面板，摄像头未开启，无真人图像；仅证明诊断界面可用。
+
+- 2026-10-28-phase4-demo-settlement.png：1280×720 大屏演示结算，不含真人影像，不代表真实 AI 返回。
+- 2026-10-28-phase4-mobile-settlement.png：390×844 窄屏演示结算，允许结算区域内滚动，无页面横向溢出。
+
+- 2026-10-28-phase4-bailian-smoke.json：一次真实百炼生成请求返回 HTTP 403，本地备用正常；使用合成结算测试数据，未包含 Key，也不代表真人记录或生成成功。
+
+- 2026-10-28-phase4-bailian-diagnostic.json：第二次用户授权的一次生成联调，403 access_denied，确认为 API-Key 模型访问范围限制；不含 Key。
+
+- 2026-10-28-phase4-bailian-permission-retest.json：用户修正模型权限后一次真实生成请求成功，HTTP 200、source=ai，测试数据为合成 10 次 / 75 秒，不包含 Key。

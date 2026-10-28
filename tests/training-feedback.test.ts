@@ -91,6 +91,18 @@ describe('local-only audio policy', () => {
     player.dispose()
     expect(close).toHaveBeenCalledOnce()
   })
+  it('prefers short game tones even when a local speech voice exists',async()=>{
+    const speak=vi.fn(),start=vi.fn()
+    vi.stubGlobal('SpeechSynthesisUtterance',class{})
+    vi.stubGlobal('speechSynthesis',{getVoices:()=>[{lang:'zh-CN',localService:true}],speak,cancel:vi.fn()})
+    vi.stubGlobal('AudioContext',class{
+      state='running';currentTime=0;destination={};close=vi.fn().mockResolvedValue(undefined)
+      createOscillator(){return{type:'',frequency:{value:0},connect:vi.fn(),disconnect:vi.fn(),start,stop:vi.fn(),onended:null}}
+      createGain(){return{gain:{setValueAtTime:vi.fn(),linearRampToValueAtTime:vi.fn(),exponentialRampToValueAtTime:vi.fn()},connect:vi.fn(),disconnect:vi.fn()}}
+    })
+    const player=new LocalCuePlayer(vi.fn());expect(await player.unlock()).toBe('tone');player.play('tracked')
+    expect(start).toHaveBeenCalledTimes(2);expect(speak).not.toHaveBeenCalled();player.dispose()
+  })
   it('reports a suspended audio context when the browser rejects playback', async () => {
     vi.stubGlobal('AudioContext', class {
       state = 'suspended'

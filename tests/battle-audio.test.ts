@@ -17,8 +17,8 @@ describe('basic battle audio degrades without blocking the game',()=>{
       createGain(){return{gain:{setValueAtTime:vi.fn(),linearRampToValueAtTime:vi.fn(),exponentialRampToValueAtTime:vi.fn()},connect:vi.fn(),disconnect:vi.fn()}}
     })
     const audio=new BattleAudio();expect(await audio.unlock()).toBe(true)
-    expect(audio.strike()).toBe(true);expect(ramp).toHaveBeenCalledWith(70,.12)
-    audio.victory();expect(start).toHaveBeenCalledTimes(4)
+    expect(audio.strike()).toBe(true);expect(ramp).toHaveBeenCalledWith(55,.14)
+    audio.victory();expect(start).toHaveBeenCalledTimes(6)
     audio.dispose();expect(close).toHaveBeenCalledOnce()
   })
   it('bounds a suspended resume request instead of hanging',async()=>{

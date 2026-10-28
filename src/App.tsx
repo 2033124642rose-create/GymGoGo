@@ -9,6 +9,8 @@ import { BattleAudio } from './game/BattleAudio'
 import { ReadyGate } from './game/ReadyGate'
 import ReadyDebug from './game/ReadyDebug'
 import SquatDebug from './squat/SquatDebug'
+import BattleResult from './settlement/BattleResult'
+import type { BattleSummary } from './settlement/review'
 import { ArrowRight, Camera, Check, ChevronRight, CircleHelp, Clock3, Flag, Heart, Leaf, LockKeyhole, Play, RotateCcw, ShieldCheck, Sparkles, Swords, Trophy, X, Zap } from 'lucide-react'
 
 const TARGET = 10
@@ -88,6 +90,7 @@ function ForestBackdrop() {
 
 export default function App() {
   const [mode, setMode] = useState<'real' | 'demo'>('real')
+  const [result,setResult]=useState<BattleSummary|null>(null)
   const [squat, setSquat] = useState<SquatResult>(()=>new SquatCounter().getState())
   const counter = useRef(new SquatCounter(TARGET))
   const readyGate = useRef(new ReadyGate())
@@ -132,7 +135,9 @@ export default function App() {
     if(next===TARGET){
       round.active=false
       readyGate.current.stop('ended');syncReady()
-      setSeconds(Math.floor((Date.now()-startTime.current)/1000));setPhase('won')
+      const duration=Math.max(0,Math.floor((Date.now()-startTime.current)/1000))
+      setSeconds(duration);setPhase('won')
+      setResult({roundId:crypto.randomUUID(),count:next,seconds:duration,mode:source,defeated:true})
       if(effectsEnabledRef.current)battleAudio.current?.victory()
     }
   },[syncReady])
@@ -195,6 +200,7 @@ export default function App() {
   function start() {
     if(readyGate.current.phase==='waiting'||readyGate.current.phase==='countdown')return
     const id=session.current.id+1
+    setResult(null)
     session.current={id,active:mode==='demo',mode,count:0,startedAt:performance.now()}
     if(mode==='real')readyGate.current.prepare()
     else readyGate.current.stop()
@@ -208,6 +214,7 @@ export default function App() {
     requestAnimationFrame(() => (battleImmersive ? battleActionButton : actionButton).current?.focus())
   }
   function reset(nextMode = mode) {
+    setResult(null)
     readyGate.current.stop();syncReady()
     session.current={id:session.current.id+1,active:false,mode:nextMode,count:0,startedAt:performance.now()}
     counter.current.reset();setSquat(counter.current.getState());battleAudio.current?.silence()
@@ -255,7 +262,7 @@ export default function App() {
     </header>
 
     <main id="main">
-      <div className="page-heading"><div><div className="eyebrow"><Leaf size={15}/> GYM GOGO · 森林冒险启程</div><h1>把每一次深蹲，<span>变成一次冒险。</span></h1><p>营地已经点亮，森林里的小团子还在打盹。<br className="hero-mobile-break"/>动一动，开启属于你的第一场冒险。</p></div><span className="prototype-tag"><span/> 第三阶段 · 真实深蹲计数测试版 · 待真人验收</span></div>
+      <div className="page-heading"><div><div className="eyebrow"><Leaf size={15}/> GYM GOGO · 森林冒险启程</div><h1>把每一次深蹲，<span>变成一次冒险。</span></h1><p>营地已经点亮，森林里的小团子还在打盹。<br className="hero-mobile-break"/>动一动，开启属于你的第一场冒险。</p></div><span className="prototype-tag"><span/> 第四阶段 · 森林战报与体验优化 · 待真人验收</span></div>
 
       <div ref={battleRoot} className={`game-layout ${battleImmersive ? 'is-battle-immersive' : ''}`}
         role={battleImmersive ? 'dialog' : undefined} aria-modal={battleImmersive ? true : undefined}
@@ -305,6 +312,7 @@ export default function App() {
             {phase === 'active' && <button className="reset-button" onClick={()=>reset()}><RotateCcw size={12}/>{mode==='real'?'重置本局':'重置演示'}</button>}
           </div>
         </div>}
+        {result&&<BattleResult key={result.roundId} result={result} onReplay={start} immersive={battleImmersive}/>}
       </div>
 
       <section className="how-it-works" aria-label="冒险指南">
@@ -315,10 +323,10 @@ export default function App() {
           { icon: Trophy, title: '收获你的通关时刻', text: '达成小目标，把今天的成就感收入囊中。', label: '快乐升级' },
         ].map((step, i) => <div className={`guide-step guide-step-${i + 1}`} key={step.title}><div className="step-top"><span className="step-icon"><step.icon size={23}/></span><span className="step-number">0{i + 1}</span></div><div><h3>{step.title}</h3><p>{step.text}</p></div><span className="step-label">{step.label}<ArrowRight size={14}/></span></div>)}
       </section>
-      <div className="demo-notice"><Sparkles size={15}/><span>第三阶段测试版：点击准备挑战，走远入镜，识别约 2 秒后倒计时 3 秒；正式开局后明显下蹲并起立即可触发攻击。按钮演示为独立模式，未接入 AI 评价。</span></div>
+      <div className="demo-notice"><Sparkles size={15}/><span>第四阶段测试版：真实挑战通关后可主动召唤 AI 战报，每局一次；未配置服务或请求失败时使用本地评价。按钮演示不会调用 AI。</span></div>
     </main>
     <footer><span>GymGoGo <span className="footer-dot">·</span> 让运动多一点好玩。</span><span>MADE FOR YOUR NEXT LITTLE WIN <Heart size={12}/></span></footer>
 
-    {help && <div className="modal-overlay" onClick={() => { setHelp(false); helpButton.current?.focus() }}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e=>e.stopPropagation()}><button ref={closeButton} className="close-button" aria-label="关闭玩法说明" onClick={() => { setHelp(false); helpButton.current?.focus() }}><X size={21}/></button><span className="modal-icon"><Swords size={27}/></span><div className="eyebrow">YOUR FIRST ADVENTURE</div><h2 id="help-title">先来一场小小的冒险</h2><p>第三阶段有两种独立模式：真实深蹲与按钮演示。切换模式会清空本局。</p><ol><li>点击「开启摄像头」并亲自授权，全身入镜后可查看关键点。随时点击关闭即可停止采集。</li><li>真实模式点击「准备挑战」后再走远就位。主要关节入镜并连续识别约 2 秒，保持姿态等待 3 秒倒计时结束，再完成深蹲。倒计时离开画面会重新等待；随时可取消准备。</li><li>按钮演示中点击「模拟完成一次深蹲」触发攻击，真实动作不会增加模拟次数。两种模式均完成 10 次后通关。</li></ol><div className="modal-note"><ShieldCheck size={18}/> 原始视频仅本地处理，不录制、不上传；真实计数为初版规则，待真人验收，不做精准姿势诊断。</div></section></div>}
+    {help && <div className="modal-overlay" onClick={() => { setHelp(false); helpButton.current?.focus() }}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e=>e.stopPropagation()}><button ref={closeButton} className="close-button" aria-label="关闭玩法说明" onClick={() => { setHelp(false); helpButton.current?.focus() }}><X size={21}/></button><span className="modal-icon"><Swords size={27}/></span><div className="eyebrow">YOUR FIRST ADVENTURE</div><h2 id="help-title">先来一场小小的冒险</h2><p>当前有两种独立模式：真实深蹲与按钮演示。切换模式会清空本局。</p><ol><li>点击「开启摄像头」并亲自授权，全身入镜后可查看关键点。随时点击关闭即可停止采集。</li><li>真实模式点击「准备挑战」后再走远就位。主要关节入镜并连续识别约 2 秒，保持姿态等待 3 秒倒计时结束，再完成深蹲。倒计时离开画面会重新等待；随时可取消准备。</li><li>按钮演示中点击「模拟完成一次深蹲」触发攻击，真实动作不会增加模拟次数。两种模式均完成 10 次后通关。</li></ol><div className="modal-note"><ShieldCheck size={18}/> 原始视频仅本地处理，不录制、不上传；真实计数为初版规则，待真人验收，不做精准姿势诊断。</div></section></div>}
   </div>
 }

@@ -15,7 +15,7 @@ export class BattleAudio {
       return this.context?.state === 'running'
     } catch {return false}
   }
-  private note(frequency: number, endFrequency: number, duration: number, delay = 0, type: OscillatorType = 'sine') {
+  private note(frequency: number, endFrequency: number, duration: number, delay = 0, type: OscillatorType = 'sine',volume=.12) {
     const context = this.context
     if (!context || context.state !== 'running') return false
     try {
@@ -24,7 +24,7 @@ export class BattleAudio {
       oscillator.frequency.setValueAtTime(frequency,time)
       oscillator.frequency.exponentialRampToValueAtTime(endFrequency,time+duration)
       gain.gain.setValueAtTime(0,time)
-      gain.gain.linearRampToValueAtTime(.12,time+.008)
+      gain.gain.linearRampToValueAtTime(volume,time+.008)
       gain.gain.exponentialRampToValueAtTime(.001,time+duration)
       oscillator.connect(gain);gain.connect(context.destination)
       oscillator.start(time);oscillator.stop(time+duration+.01)
@@ -33,9 +33,13 @@ export class BattleAudio {
       return true
     } catch {return false}
   }
-  strike() {return this.note(220,70,.12,0,'triangle')}
+  strike() {
+    const impact=this.note(185,55,.14,0,'triangle',.1)
+    if(impact)this.note(880,440,.07,.035,'sine',.045)
+    return impact
+  }
   countdown() {return this.note(660,660,.09)}
-  victory() { [523,659,784].forEach((pitch,i)=>this.note(pitch,pitch,.22,.14+i*.15)) }
+  victory() { [523,659,784,1046].forEach((pitch,i)=>this.note(pitch,pitch,.2,.14+i*.13,'sine',.09)) }
   silence() {this.nodes.forEach(node=>{try{node.stop()}catch{/* already ended */}});this.nodes=[]}
   dispose() {this.silence();if(this.context)void this.context.close().catch(()=>{});this.context=null}
 }

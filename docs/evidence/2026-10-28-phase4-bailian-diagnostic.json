@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-28",
+  "test": "Second user-authorized real API diagnostic; synthetic settlement, not human exercise data",
+  "upstreamCalls": 1,
+  "upstreamStatus": 403,
+  "errorCode": "access_denied",
+  "safeMessage": "Access denied by API-Key restrictions.",
+  "result": {
+    "title": "森林破关者",
+    "review": "团子揉着眼睛翻开森林日记：今天的守门任务，被你一下一下认真打通了！把这枚萌芽徽章收好，下次冒险再见。",
+    "source": "local",
+    "notice": "百炼请求未通过（HTTP 403 · access_denied），已使用本地战报"
+  }
+}

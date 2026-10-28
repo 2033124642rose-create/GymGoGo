@@ -35,7 +35,7 @@ export class LocalCuePlayer implements CuePlayer {
       }
     } catch { /* Local speech may still be available when Web Audio is blocked. */ }
     const local = this.localVoice()
-    const mode: SoundMode = local ? 'speech' : this.context?.state === 'running' ? 'tone' :
+    const mode: SoundMode = this.context?.state === 'running' ? 'tone' : local ? 'speech' :
       this.context ? 'blocked' : 'unsupported'
     this.onMode(mode)
     return mode
@@ -48,6 +48,7 @@ export class LocalCuePlayer implements CuePlayer {
 
   play(status: Tracking, sample = false) {
     this.silence()
+    if(this.context?.state==='running'){this.tone(status);return}
     const voice = this.localVoice()
     if (voice) {
       const utterance = new SpeechSynthesisUtterance(sample ? '这是声音提示示例' : SPOKEN[status])
@@ -71,14 +72,14 @@ export class LocalCuePlayer implements CuePlayer {
       const gain = context.createGain()
       oscillator.type = 'sine'
       oscillator.frequency.value = pitch
-      const start = context.currentTime + i * .19
+      const start = context.currentTime + i * .12
       gain.gain.setValueAtTime(0, start)
       gain.gain.linearRampToValueAtTime(.12, start + .025)
-      gain.gain.exponentialRampToValueAtTime(.001, start + .17)
+      gain.gain.exponentialRampToValueAtTime(.001, start + .1)
       oscillator.connect(gain)
       gain.connect(context.destination)
       oscillator.start(start)
-      oscillator.stop(start + .18)
+      oscillator.stop(start + .11)
       this.nodes.push(oscillator)
       oscillator.onended = () => {
         oscillator.disconnect(); gain.disconnect()

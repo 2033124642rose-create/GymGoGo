@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-28",
+  "test": "Single real API verification after user updated model permissions; synthetic settlement, not human training data",
+  "upstreamCalls": 1,
+  "upstreamStatus": 200,
+  "errorCode": null,
+  "safeMessage": null,
+  "result": {
+    "title": "贪睡团子终结者",
+    "review": "贪睡团子蜷在树洞里打呼噜，被十次精准出击惊醒！75秒内完成突袭，团子翻身滚出树洞，连梦都来不及做就投降啦～萌芽森林的清晨，因你而彻底清醒！",
+    "source": "ai"
+  }
+}
