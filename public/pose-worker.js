@@ -36,7 +36,7 @@ self.onmessage = async ({ data }) => {
       const start = performance.now()
       const result = landmarker.detectForVideo(frame, data.timestamp)
       self.postMessage({
-        type: 'result', landmarks: result.landmarks[0] ?? [],
+        type: 'result', landmarks: result.landmarks[0] ?? [], worldLandmarks: result.worldLandmarks[0] ?? [], timestamp: data.timestamp,
         inferenceMs: performance.now() - start,
       })
     } catch {

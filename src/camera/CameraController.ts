@@ -1,9 +1,9 @@
 import { assessPose, drawPose, EMPTY_GROUPS } from './pose'
-import type { JointGroups, Point, Tracking } from './pose'
+import type { JointGroups, Point, PoseFrame, Tracking } from './pose'
 
 export type Phase = 'idle' | 'requesting' | 'loading' | 'running' | 'error'
 export interface CameraState { phase: Phase; tracking: Tracking; groups: JointGroups; message: string; backend?: string }
-interface WorkerReply { type: 'ready' | 'result' | 'error'; landmarks?: Point[]; inferenceMs?: number; backend?: string; code?: string }
+interface WorkerReply { type: 'ready' | 'result' | 'error'; landmarks?: Point[]; worldLandmarks?: Point[]; timestamp?: number; inferenceMs?: number; backend?: string; code?: string }
 export interface PoseWorker {
   onmessage: ((event: MessageEvent<WorkerReply>) => void) | null
   onerror: ((event: ErrorEvent) => void) | null
@@ -67,7 +67,7 @@ export class CameraController {
   private ended = () => this.fail('摄像头连接已中断或系统权限已撤回。请检查设备后重新开启。')
 
   constructor(private video: HTMLVideoElement, private canvas: HTMLCanvasElement,
-    private onState: (state: CameraState) => void, private env = environment) {}
+    private onState: (state: CameraState) => void, private env = environment, private onPose?: (frame: PoseFrame | null) => void) {}
 
   private update(patch: Partial<CameraState>) {
     this.state = { ...this.state, ...patch }
@@ -105,6 +105,7 @@ export class CameraController {
           this.interval = Math.max(1000 / 15, Math.min(250, (data.inferenceMs ?? 0) * 1.15))
           const points = data.landmarks ?? []
           drawPose(this.canvas, points)
+          this.onPose?.({ landmarks: points, worldLandmarks: data.worldLandmarks ?? [], timestamp: data.timestamp ?? this.env.now() })
           const assessment = assessPose(points, this.hasSeen)
           if (points.length > 0) this.hasSeen = true
           this.candidateCount = this.candidate === assessment.tracking ? this.candidateCount + 1 : 1
@@ -176,6 +177,7 @@ export class CameraController {
     this.lastCapture = -Infinity
     this.interval = 1000 / 15
     this.state = initialState()
+    this.onPose?.(null)
     if (notify) this.onState(this.state)
   }
 }

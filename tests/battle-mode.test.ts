@@ -38,6 +38,7 @@ afterEach(() => {
 describe('shared immersive battle board', () => {
   it('keeps the original monster, arena, video and canvas mounted with existing game progress', async () => {
     render(createElement(App))
+    fireEvent.click(screen.getByRole('button', { name: '按钮演示' }))
     const arena = screen.getByRole('region', { name: '深蹲挑战游戏区域' })
     const video = screen.getByLabelText('本地摄像头实时画面')
     const canvas = screen.getByLabelText('人体骨骼关键点叠加层')
@@ -58,6 +59,7 @@ describe('shared immersive battle board', () => {
   })
   it('updates the giant simulated counter, wounds and HP from the same manual attack', async () => {
     render(createElement(App))
+    fireEvent.click(screen.getByRole('button', { name: '按钮演示' }))
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: '战斗大屏' })) })
     fireEvent.click(screen.getByRole('button', { name: '开始挑战' }))
     for (let i = 0; i < 10; i++) fireEvent.click(screen.getByRole('button', { name: '模拟完成一次深蹲' }))
@@ -69,6 +71,7 @@ describe('shared immersive battle board', () => {
   })
   it('does not turn genuine pose success into fake squat counts or attacks, and keeps the stream on exit', async () => {
     render(createElement(App))
+    fireEvent.click(screen.getByRole('button', { name: '按钮演示' }))
     fireEvent.click(screen.getByRole('button', { name: '开启摄像头' }))
     await waitFor(() => expect(FakeWorker.instances.length).toBe(1))
     const worker = FakeWorker.instances[0]

@@ -5,6 +5,7 @@ import './style.css'
 import './playful.css'
 import './camera/camera.css'
 import './battle.css'
+import './round.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode><App /></React.StrictMode>,

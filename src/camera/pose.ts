@@ -1,4 +1,5 @@
 export interface Point { x: number; y: number; z?: number; visibility?: number }
+export interface PoseFrame { landmarks: Point[]; worldLandmarks: Point[]; timestamp: number }
 export type Tracking = 'waiting' | 'tracked' | 'partial' | 'lost'
 export const JOINT_GROUPS = { shoulders: [11, 12], hips: [23, 24], knees: [25, 26], ankles: [27, 28] } as const
 export type JointGroups = Record<keyof typeof JOINT_GROUPS, boolean>

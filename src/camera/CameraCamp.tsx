@@ -3,6 +3,7 @@ import { Camera, CameraOff, CircleCheck, Expand, Leaf, LoaderCircle, LogOut, Shi
 import { CameraController } from './CameraController'
 import type { CameraState } from './CameraController'
 import { EMPTY_GROUPS } from './pose'
+import type { PoseFrame } from './pose'
 import { containFrame, isolateTrainingScreen } from './trainingScreen'
 import { LocalCuePlayer, StableStatusAnnouncer } from './trainingFeedback'
 import type { SoundMode } from './trainingFeedback'
@@ -13,6 +14,8 @@ interface CameraCampProps {
   screenRoot?: RefObject<HTMLElement | null>
   onImmersiveChange?: (value: boolean) => void
   onRecognitionChange?: (value: BattleRecognition) => void
+  onPoseFrame?: (value: PoseFrame | null) => void
+  countingMode?: boolean
 }
 
 const TRACKING_TEXT = {
@@ -23,7 +26,7 @@ const TRACKING_TEXT = {
 } as const
 const GROUP_NAMES = { shoulders: '肩膀', hips: '髋部', knees: '膝盖', ankles: '脚踝' } as const
 
-export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitionChange }: CameraCampProps = {}) {
+export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitionChange, onPoseFrame, countingMode = false }: CameraCampProps = {}) {
   const root = useRef<HTMLElement>(null)
   const stage = useRef<HTMLDivElement>(null)
   const enterButton = useRef<HTMLButtonElement>(null)
@@ -143,7 +146,7 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
     const session = new CameraController(video.current!, canvas.current!, next => {
       setState(next)
       if (next.phase === 'idle' || next.phase === 'error') setRatio(4 / 3)
-    })
+    }, undefined, frame => onPoseFrame?.(frame))
     controller.current = session
     const leave = () => session.stop()
     window.addEventListener('pagehide', leave)
@@ -152,10 +155,11 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
   const busy = state.phase === 'requesting' || state.phase === 'loading'
   const live = state.phase === 'loading' || state.phase === 'running'
   const active = busy || state.phase === 'running'
-  const [title, hint] = state.phase === 'running' ? TRACKING_TEXT[state.tracking] :
+  const [title, originalHint] = state.phase === 'running' ? TRACKING_TEXT[state.tracking] :
     state.phase === 'requesting' ? ['等待摄像头授权', state.message] :
     state.phase === 'loading' ? ['正在加载姿态模型', state.message] :
     state.phase === 'error' ? ['观测暂时中断', state.message] : ['摄像头已关闭', '点击开启后再请求权限，原始画面只在你的浏览器中处理。']
+  const hint = countingMode && state.phase === 'running' && state.tracking === 'tracked' ? '主要关节已入镜；准备挑战后，明显下蹲再起立即可攻击。' : originalHint
   const largeTitle = state.phase === 'running' ? {
     waiting: '等待全身入镜', tracked: '识别成功', partial: '请让全身入镜', lost: '未检测到人体',
   }[state.tracking] : title
@@ -173,7 +177,7 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
   return <section ref={root} className={`camera-camp ${immersive ? 'is-immersive' : ''}`} role={immersive && !screenRoot ? 'dialog' : undefined}
     aria-modal={immersive && !screenRoot ? true : undefined} aria-label={immersive && !screenRoot ? '沉浸式游戏战斗模式' : '真实摄像头与姿态识别'}>
     <div className="camp-section-heading"><span>{immersive ? <Leaf size={23}/> : <Camera size={14}/>} {immersive ? <span><span className="training-wordmark">GymGoGo · </span>战斗大屏</span> : '营地观测区'}</span>
-      <div className="camp-screen-actions"><span className="real-label">真实识别 · 不计数</span>
+      <div className="camp-screen-actions"><span className="real-label">{countingMode ? '实时识别 · 游戏动作计数' : '真实识别 · 不计数'}</span>
         <button ref={enterButton} hidden={immersive} className="training-screen-button" onClick={enterScreen}><Expand size={16}/>战斗大屏</button>
         {immersive && !nativeFullscreen && <button className="training-native-button" onClick={requestNativeFullscreen}><Expand size={17}/>系统全屏</button>}
         {immersive && <button ref={exitButton} className="training-exit-button" onClick={exitScreen}><LogOut size={18}/>退出大屏</button>}
@@ -213,7 +217,7 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
         }}>试听提示</button>
       </>}
     </div>
-    <p className="camera-scope"><ShieldCheck size={13}/> 仅识别关键点，不判断深蹲，也不会触发怪兽攻击。</p>
+    <p className="camera-scope"><ShieldCheck size={13}/>{countingMode ? '真实挑战中明显下蹲并起立即可攻击，不评价姿势是否标准。视频仅本地处理。' : '按钮演示模式：真实姿态不会增加模拟次数。'}</p>
     {immersive && <div className="training-screen-notes"><span>{soundHint} 试听不是识别结果。</span><span>{screenNotice} · 退出大屏不关闭摄像头。</span></div>}
     </div>
   </section>
