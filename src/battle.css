@@ -1,0 +1,141 @@
+.camp-simulation { width:100%; }
+.camp-simulation[hidden] { display:none!important; }
+.camp-simulation>.primary-button { width:100%; }
+.camp-simulation>.reset-button { margin-left:auto; margin-right:auto; }
+
+/* Fullscreen belongs to the shared battle board, not the camera alone. */
+.game-layout.is-battle-immersive {
+  position:fixed; inset:0; z-index:1000; width:100%; height:100vh; height:100dvh;
+  display:grid; grid-template-columns:minmax(0,55fr) minmax(0,45fr);
+  grid-template-rows:minmax(0,1fr) auto; gap:16px 22px;
+  padding:76px 24px 18px; margin:0; overflow:hidden; align-items:stretch;
+  background:radial-gradient(ellipse at 35% 25%,#2c3f2a,#111d17 80%);
+}
+.game-layout.is-battle-immersive:fullscreen { width:100%; height:100%; }
+.is-battle-immersive>.arena { grid-column:1; grid-row:1; position:relative; top:auto; height:100%; min-height:0; align-self:stretch; border-radius:22px; }
+.is-battle-immersive>.training-panel { grid-column:2; grid-row:1; display:block; position:static; padding:12px; height:100%; min-height:0; overflow:visible; border-radius:22px; }
+.is-battle-immersive .panel-title { display:none; }
+.is-battle-immersive .camera-camp.is-immersive { position:static; inset:auto; padding:0; width:100%; height:100%; min-height:0; margin:0; background:transparent; display:grid; grid-template-rows:minmax(0,1fr) auto; gap:8px; overflow:hidden; }
+.is-battle-immersive .camp-section-heading { position:absolute; top:15px; left:24px; right:24px; height:44px; margin:0; padding:0; border:0; z-index:3; font-size:19px; }
+.is-battle-immersive .camp-main-stage { grid-row:1; min-height:0; }
+.is-battle-immersive .camp-tracking { display:none; }
+.is-battle-immersive .camp-session-tools { grid-row:2; min-height:0; }
+.is-battle-immersive .camera-controls { gap:7px; flex-wrap:wrap; }
+.is-battle-immersive .camera-toggle,.is-battle-immersive .camera-stop { min-width:0; min-height:38px; font-size:13px; padding:8px 12px; }
+.is-battle-immersive .training-sound-button,.is-battle-immersive .training-sound-test { min-height:38px; font-size:12px; padding:8px 11px; }
+.is-battle-immersive .camera-scope { display:none; }
+.is-battle-immersive .training-screen-notes { font-size:10px; margin-top:5px; gap:2px 12px; }
+.is-battle-immersive .joint-status { margin-bottom:7px; gap:5px; }
+.is-battle-immersive .joint-status span { font-size:11px; padding:4px 7px; }
+.is-battle-immersive .camp-camera-empty strong { font-size:clamp(19px,2vw,30px); }
+.is-battle-immersive .camp-camera-empty>span:not(.camp-camera-emblem) { font-size:13px; }
+.is-battle-immersive .camp-camera-empty small { font-size:11px; }
+.is-battle-immersive .arena-top { padding:15px 19px 0; }
+.is-battle-immersive .arena-title { margin:13px 20px 0; }
+.is-battle-immersive .arena-title h2 { font-size:20px; }
+.is-battle-immersive .arena-title p { margin:5px 0 12px; font-size:12px; }
+.is-battle-immersive .monster-health { margin:0 20px; width:auto; }
+.is-battle-immersive .scene { min-height:0; flex:1 1 0; }
+.is-battle-immersive .monster { width:min(82%,440px); height:min(88%,370px); bottom:0; }
+.is-battle-immersive .monster-speech { top:20px; left:56%; max-width:41%; }
+.is-battle-immersive .combo-badge { top:55px; left:17px; }
+.is-battle-immersive .arena-bottom { padding:10px 18px; font-size:11px; }
+.is-battle-immersive .victory { bottom:12px; }
+
+.battle-footer { grid-column:1/-1; grid-row:2; min-width:0; display:grid; grid-template-columns:minmax(0,.95fr) minmax(0,1.1fr) minmax(0,1fr); gap:22px; align-items:center; border:1px solid #b6d28a4d; padding:12px 22px; border-radius:20px 24px 20px 24px; background:#233320; box-shadow:inset 0 2px 0 #deedbc0a,0 4px 0 #0b1712; }
+.battle-counter>span { font-size:13px; color:#dce7ae; display:block; }
+.battle-counter>strong { display:flex; align-items:baseline; gap:10px; font-size:clamp(66px,7.6vw,124px); line-height:1.05; font-variant-numeric:tabular-nums; letter-spacing:-3px; }
+.battle-counter b { color:#edffd0; font-weight:800; }
+.battle-counter em { font-size:.45em; color:#c7d6ad; font-style:normal; font-weight:600; letter-spacing:-1px; }
+.battle-counter small { display:flex; align-items:center; gap:6px; font-size:11px; color:#aebf9c; padding-top:2px; }
+.battle-recognition { min-width:0; padding-left:22px; border-left:1px solid #b6ca8e33; }
+.battle-recognition strong { display:flex; align-items:center; gap:10px; font-size:clamp(28px,3vw,52px); line-height:1.25; color:#ecf5d5; font-weight:800; }
+.battle-status-dot { width:11px; height:11px; background:#d7e6aa; border-radius:50%; flex-shrink:0; }
+.battle-recognition p { margin:8px 0 0; font-size:12px; line-height:1.7; color:#c0d0ab; }
+.battle-recognition-tracked strong { color:#e9ffc5; }
+.battle-recognition-partial strong,.battle-recognition-lost strong,.battle-recognition-error strong { color:#ffe3a0; }
+.battle-recognition-partial .battle-status-dot,.battle-recognition-lost .battle-status-dot,.battle-recognition-error .battle-status-dot { background:#ffe3a0; }
+.battle-game-controls { min-width:0; }
+.battle-game-controls>span { display:block; font-size:12px; line-height:1.7; color:#d4dfb5; margin-bottom:10px; }
+.battle-game-controls .primary-button { width:100%; font-size:15px; }
+.battle-game-controls .reset-button { margin:8px auto 0; }
+
+@media(max-width:1100px) {
+  .game-layout.is-battle-immersive { padding:66px 16px 14px; gap:12px 16px; }
+  .is-battle-immersive .camp-section-heading { top:11px; left:16px; right:16px; height:40px; font-size:16px; flex-wrap:nowrap; }
+  .battle-footer { gap:16px; padding:10px 16px; }
+  .battle-counter>strong { font-size:82px; }
+  .battle-recognition { padding-left:16px; }
+  .battle-recognition strong { font-size:32px; }
+  .battle-recognition p { font-size:11px; }
+  .battle-game-controls .primary-button { font-size:13px; }
+  .is-battle-immersive .world-name { display:none; }
+  .is-battle-immersive .combo-badge { padding:8px 10px; max-width:135px; }
+  .is-battle-immersive .combo-badge strong { font-size:20px; }
+}
+@media(max-width:800px) {
+  .is-battle-immersive .training-panel { padding:8px; }
+  .is-battle-immersive .arena-top { padding:10px 11px 0; gap:5px; }
+  .is-battle-immersive .arena-title { margin:11px 12px 0; }
+  .is-battle-immersive .arena-title h2 { font-size:16px; }
+  .is-battle-immersive .arena-title p { font-size:11px; }
+  .is-battle-immersive .monster-health { margin:0 12px; }
+  .is-battle-immersive .monster-health small { display:none; }
+  .is-battle-immersive .camera-controls { gap:5px; }
+  .is-battle-immersive .camera-controls button { padding:7px 8px; font-size:11px; min-height:33px; }
+  .is-battle-immersive .camera-controls button svg { width:13px; height:13px; }
+  .is-battle-immersive .camp-video-label { font-size:10px; top:7px; left:7px; padding:4px 6px; }
+  .is-battle-immersive .training-screen-notes { font-size:9px; line-height:1.5; }
+  .battle-counter>strong { font-size:70px; }
+  .battle-recognition strong { font-size:28px; }
+}
+@media(max-width:650px) {
+  .game-layout.is-battle-immersive { padding:60px 10px 10px; gap:10px; }
+  .is-battle-immersive .camp-section-heading { left:10px; right:10px; top:9px; font-size:14px; }
+  .is-battle-immersive .training-exit-button { font-size:11px; }
+  .is-battle-immersive .arena-title p { display:none; }
+  .is-battle-immersive .arena-title { margin-bottom:12px; }
+  .is-battle-immersive .monster-health>div:first-child { font-size:10px; }
+  .is-battle-immersive .monster-health strong { font-size:13px; }
+  .is-battle-immersive .monster-health strong span { font-size:9px; }
+  .is-battle-immersive .health-track { height:12px; padding:2px; }
+  .is-battle-immersive .level-badge { font-size:8px; padding:5px; }
+  .is-battle-immersive .demo-badge { font-size:7px; }
+  .is-battle-immersive .arena-bottom { font-size:9px; padding:7px 9px; }
+  .is-battle-immersive .arena-bottom>span:last-child { display:none; }
+  .is-battle-immersive .monster-speech { display:none; }
+  .is-battle-immersive .combo-badge { top:16px; left:9px; padding:7px; max-width:100px; }
+  .is-battle-immersive .combo-badge strong { font-size:16px; }
+  .is-battle-immersive .combo-badge span { font-size:9px; }
+  .is-battle-immersive .victory { flex-wrap:wrap; justify-content:center; padding:7px; max-width:94%; }
+  .is-battle-immersive .victory strong { font-size:13px; }
+  .is-battle-immersive .victory span { font-size:9px; }
+  .is-battle-immersive .camp-camera-empty { inset:25px 5px 7px; gap:6px; }
+  .is-battle-immersive .camp-camera-empty strong { font-size:14px; letter-spacing:0; }
+  .is-battle-immersive .camp-camera-emblem { width:30px; height:30px; border-radius:9px; }
+  .is-battle-immersive .camp-camera-emblem svg { width:19px; }
+  .is-battle-immersive .camp-camera-empty>span:not(.camp-camera-emblem),.is-battle-immersive .camp-camera-empty small { display:none; }
+  .is-battle-immersive .joint-status { gap:3px; }
+  .is-battle-immersive .joint-status span { font-size:9px; padding:3px 4px; }
+  .battle-footer { grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:10px; padding:10px 12px; }
+  .battle-counter>span { font-size:10px; }
+  .battle-counter>strong { font-size:60px; }
+  .battle-counter small { font-size:9px; }
+  .battle-recognition { padding-left:10px; }
+  .battle-recognition strong { font-size:24px; gap:6px; }
+  .battle-recognition p { font-size:10px; margin-top:5px; }
+  .battle-game-controls { grid-column:1/-1; }
+  .battle-game-controls>span { font-size:10px; margin-bottom:6px; }
+  .battle-game-controls .primary-button { min-height:40px; font-size:13px; padding:9px; }
+  .battle-game-controls .reset-button { margin-top:5px; font-size:10px; }
+}
+@media(max-height:600px) and (min-width:651px) {
+  .game-layout.is-battle-immersive { padding-top:57px; gap:9px 15px; }
+  .is-battle-immersive .camp-section-heading { top:8px; }
+  .is-battle-immersive .arena-title { margin-top:8px; }
+  .is-battle-immersive .arena-title p,.is-battle-immersive .training-screen-notes,.battle-recognition p { display:none; }
+  .is-battle-immersive .arena-bottom { padding:6px 12px; }
+  .battle-counter>strong { font-size:64px; }
+  .battle-recognition strong { font-size:28px; }
+  .battle-footer { padding:8px 15px; }
+}

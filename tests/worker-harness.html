@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><title>GymGoGo 开发测试 · 无摄像头模型自检</title>
+<style>body{font:16px system-ui;background:#17211f;color:#d8e6aa;padding:30px}button{font:inherit;padding:12px;margin:10px}pre{white-space:pre-wrap;line-height:1.8}</style>
+<h1>真实模型 Worker 自检（不使用摄像头）</h1>
+<p>只向本地模型传入一张程序生成的黑色图片，不访问媒体设备、不上传任何图像。这是开发测试页面，不包含在生产构建入口。</p>
+<button id="load">初始化真实模型</button><button id="frame" disabled>检测空白帧</button><button id="stop">释放测试线程</button>
+<pre id="result">尚未启动</pre>
+<script type="module">
+  let worker
+  const result = document.querySelector('#result')
+  document.querySelector('#load').onclick = () => {
+    worker?.terminate()
+    document.querySelector('#frame').disabled = true
+    result.textContent = '正在初始化本地模型…'
+    worker = new Worker('/pose-worker.js')
+    worker.onmessage = ({data}) => {
+      result.textContent = JSON.stringify(data, null, 2)
+      if(data.type === 'ready') document.querySelector('#frame').disabled = false
+    }
+    worker.onerror = e => result.textContent = 'Worker Error: ' + e.message
+    worker.postMessage({type:'init'})
+  }
+  document.querySelector('#frame').onclick = async () => {
+    const canvas = new OffscreenCanvas(640,480)
+    canvas.getContext('2d').fillRect(0,0,640,480)
+    const frame = await createImageBitmap(canvas)
+    worker.postMessage({type:'frame', frame, timestamp:performance.now()},[frame])
+  }
+  document.querySelector('#stop').onclick = () => {
+    worker?.terminate(); worker = undefined
+    document.querySelector('#frame').disabled = true
+    result.textContent = '线程已释放，未使用摄像头。'
+  }
+</script></html>

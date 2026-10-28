@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Camera, Check, ChevronRight, CircleHelp, Clock3, Flag, Heart, Leaf, LockKeyhole, Maximize2, Play, RotateCcw, ShieldCheck, Sparkles, Swords, Trophy, X, Zap } from 'lucide-react'
+import CameraCamp from './camera/CameraCamp'
+import type { BattleRecognition } from './camera/CameraCamp'
+import { ArrowRight, Camera, Check, ChevronRight, CircleHelp, Clock3, Flag, Heart, Leaf, LockKeyhole, Play, RotateCcw, ShieldCheck, Sparkles, Swords, Trophy, X, Zap } from 'lucide-react'
 
 const TARGET = 10
 
@@ -76,16 +78,16 @@ function ForestBackdrop() {
   </svg>
 }
 
-function PosePlaceholder() {
-  return <svg className="pose" viewBox="0 0 260 240" aria-hidden="true"><defs><linearGradient id="pose-glow"><stop stopColor="#c5a7ff"/><stop offset="1" stopColor="#86e2bf"/></linearGradient></defs><circle cx="130" cy="46" r="23" fill="#393648"/><path d="M100 91q30-16 60 0l8 64-22 9 14 59h-22l-10-48-9 48H97l15-62-20-8z" fill="#302e3e"/><path d="m102 96-23 47-16 21m95-68 22 47 17 21" fill="none" stroke="#393648" strokeWidth="20" strokeLinecap="round"/><g fill="none" stroke="url(#pose-glow)" strokeWidth="2.5" opacity=".7"><path d="m130 70-29 29 28 30 29-30-28-29v59m-29-30-20 42-16 22m93-64 20 42 17 22m-66-34-12 31 29 0-17-31m-12 31-9 39 0 22m38-61 5 39 5 22"/></g><g fill="#cfb5ff">{[[130,70],[101,99],[158,99],[81,141],[178,141],[65,163],[195,163],[117,160],[146,160],[108,199],[151,199],[108,221],[156,221]].map(([cx,cy], i)=><circle key={i} cx={cx} cy={cy} r="3.5"/>)}</g></svg>
-}
-
 export default function App() {
   const [phase, setPhase] = useState<'idle' | 'active' | 'won'>('idle')
   const [count, setCount] = useState(0)
   const [seconds, setSeconds] = useState(0)
   const [hit, setHit] = useState(false)
   const [help, setHelp] = useState(false)
+  const [battleImmersive, setBattleImmersive] = useState(false)
+  const [recognition, setRecognition] = useState<BattleRecognition>({ title: '摄像头已关闭', hint: '点击开启后在浏览器本地识别。', kind: 'idle' })
+  const battleRoot = useRef<HTMLDivElement>(null)
+  const battleActionButton = useRef<HTMLButtonElement>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const startTime = useRef(0)
   const actionButton = useRef<HTMLButtonElement>(null)
@@ -115,8 +117,9 @@ export default function App() {
     setCount(0); setSeconds(0); setHit(false)
     startTime.current = Date.now()
     setPhase('active')
-    requestAnimationFrame(() => actionButton.current?.focus())
+    requestAnimationFrame(() => (battleImmersive ? battleActionButton : actionButton).current?.focus())
   }
+  function reset() { setPhase('idle'); setCount(0); setSeconds(0); setHit(false) }
   function attack() {
     if (phase !== 'active') return
     const next = Math.min(TARGET, count + 1)
@@ -137,9 +140,11 @@ export default function App() {
     </header>
 
     <main id="main">
-      <div className="page-heading"><div><div className="eyebrow"><Leaf size={15}/> GYM GOGO · 森林冒险启程</div><h1>把每一次深蹲，<span>变成一次冒险。</span></h1><p>营地已经点亮，森林里的小团子还在打盹。<br className="hero-mobile-break"/>动一动，开启属于你的第一场冒险。</p></div><span className="prototype-tag"><span/> 第一阶段 · 交互演示</span></div>
+      <div className="page-heading"><div><div className="eyebrow"><Leaf size={15}/> GYM GOGO · 森林冒险启程</div><h1>把每一次深蹲，<span>变成一次冒险。</span></h1><p>营地已经点亮，森林里的小团子还在打盹。<br className="hero-mobile-break"/>动一动，开启属于你的第一场冒险。</p></div><span className="prototype-tag"><span/> 第二阶段 · 姿态识别体验 · 动作计数待接入</span></div>
 
-      <div className="game-layout">
+      <div ref={battleRoot} className={`game-layout ${battleImmersive ? 'is-battle-immersive' : ''}`}
+        role={battleImmersive ? 'dialog' : undefined} aria-modal={battleImmersive ? true : undefined}
+        aria-label={battleImmersive ? '沉浸式游戏战斗模式' : undefined}>
         <section className={`arena ${hit ? 'arena-hit' : ''}`} aria-label="深蹲挑战游戏区域">
           <div className="arena-top"><span className="level-badge"><Flag size={14}/> LEVEL 01</span><span className="world-name"><Leaf size={14}/> 萌芽森林 <ChevronRight size={13}/> 初次相遇</span><span className="demo-badge">DEMO</span></div>
           <div className="arena-title"><h2>深蹲挑战</h2><p>第一站 · 唤醒森林里的贪睡团子</p></div>
@@ -155,20 +160,31 @@ export default function App() {
             {phase === 'won' && <div className="victory"><Trophy size={20}/><strong>挑战通关！</strong><span>演示完成 · {count} 次 · {formattedTime}</span></div>}
             {phase === 'won' && <div className="confetti" aria-hidden="true">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ left: `${4 + i * 5.3}%`, animationDelay: `${i % 5 * .12}s`, backgroundColor: ['#c2d99e', '#d8e6aa', '#a5ef3f'][i % 3] }}/>)}</div>}
           </div>
-          <div className="arena-bottom"><span><Swords size={16}/> 每次有效深蹲 <ArrowRight size={13}/> 一次攻击</span><span>当前通过按钮模拟</span></div>
+          <div className="arena-bottom"><span><Swords size={16}/> 模拟一次深蹲 <ArrowRight size={13}/> 一次攻击</span><span>仅按钮模拟 · 真实姿态不触发攻击</span></div>
         </section>
 
         <aside className="training-panel" aria-label="训练控制区域">
           <div className="panel-title"><span><Leaf size={19}/> 冒险者营地</span><span className="local-tag">画面留在本地</span></div>
-          <div className="camera-placeholder"><span className="camera-label"><span/> 观测未开启 · 演示中</span><div className="viewfinder"><i/><i/><i/><i/></div><PosePlaceholder/><div className="camera-caption"><Camera size={18}/><strong>营地观测区</strong><span>整装待发，等待你的身影<br/>摄像头与人体识别将在后续阶段接入</span></div><Maximize2 className="camera-expand" size={15}/></div>
-          <div className="stats"><div><span><Swords size={14}/> 完成次数</span><strong>{count}<small> / {TARGET} 次</small></strong></div><div><span><Clock3 size={14}/> 挑战用时</span><strong>{formattedTime}</strong></div></div>
+          <CameraCamp screenRoot={battleRoot} onImmersiveChange={setBattleImmersive} onRecognitionChange={setRecognition}/>
+          <div className="camp-simulation" hidden={battleImmersive}>
+          <div className="simulation-heading"><strong>按钮模拟挑战</strong><small>与摄像头识别独立</small></div>
+          <div className="stats"><div><span><Swords size={14}/> 模拟次数</span><strong>{count}<small> / {TARGET} 次</small></strong></div><div><span><Clock3 size={14}/> 模拟用时</span><strong>{formattedTime}</strong></div></div>
           <div className="target-row"><span><Flag size={15}/> 本关目标</span><strong>完成 {TARGET} 次深蹲</strong></div>
           <div className="progress-dots" aria-label={`完成 ${count} 次，共 ${TARGET} 次`}>{Array.from({length: TARGET}, (_, i) => <span key={i} className={i < count ? 'done' : ''}>{i < count ? <Check size={12}/> : ''}</span>)}</div>
           {phase === 'idle' ? <button className="primary-button" onClick={start}><Play size={18} fill="currentColor"/> 开始挑战 <ArrowRight size={19}/></button> : phase === 'active' ? <button ref={actionButton} className="primary-button" onClick={attack}><Zap size={19} fill="currentColor"/> 模拟完成一次深蹲 <ArrowRight size={19}/></button> : <button className="primary-button" onClick={start}><RotateCcw size={18}/> 再挑战一次 <ArrowRight size={19}/></button>}
           <div className="status-message" role="status" aria-live="polite">{phase === 'idle' ? '演示模式 · 点击开始，无需摄像头权限' : phase === 'active' ? `演示中 · 已模拟 ${count} 次，点击按钮触发攻击` : '通关啦！这里的数据来自按钮模拟，并非真实训练。'}</div>
-          {phase === 'active' && <button className="reset-button" onClick={() => { setPhase('idle'); setCount(0); setSeconds(0); setHit(false) }}><RotateCcw size={12}/> 重置演示</button>}
-          <div className="privacy-note"><ShieldCheck size={16}/><p>你的动作，留在你的设备。<span>本阶段不启用摄像头，不上传视频。</span></p><LockKeyhole size={13}/></div>
+          {phase === 'active' && <button className="reset-button" onClick={reset}><RotateCcw size={12}/> 重置演示</button>}
+          <div className="privacy-note"><ShieldCheck size={16}/><p>你的动作，留在你的设备。<span>只在点击开启后采集；不上传、不录制视频。</span></p><LockKeyhole size={13}/></div>
+          </div>
         </aside>
+        {battleImmersive && <div className="battle-footer">
+          <div className="battle-counter" aria-label="模拟深蹲计数"><span>模拟深蹲次数 · 非自动计数</span><strong aria-live="polite"><b>{count}</b><em> / {TARGET}</em></strong><small><Clock3 size={13}/> 本局模拟用时 {formattedTime}</small></div>
+          <div className={`battle-recognition battle-recognition-${recognition.kind}`} role="status" aria-live="polite"><strong>{recognition.kind === 'tracked' ? <Check size={28}/> : <span className="battle-status-dot"/>}{recognition.title}</strong><p>{recognition.hint}</p></div>
+          <div className="battle-game-controls"><span>{phase === 'won' ? '模拟通关！准备下一场冒险。' : '真实姿态不自动计数，攻击仍由按钮模拟。'}</span>
+            {phase === 'idle' ? <button className="primary-button" onClick={start}><Play size={18} fill="currentColor"/>开始挑战<ArrowRight size={19}/></button> : phase === 'active' ? <button ref={battleActionButton} className="primary-button" onClick={attack}><Zap size={19} fill="currentColor"/>模拟完成一次深蹲<ArrowRight size={19}/></button> : <button className="primary-button" onClick={start}><RotateCcw size={18}/>再挑战一次<ArrowRight size={19}/></button>}
+            {phase === 'active' && <button className="reset-button" onClick={reset}><RotateCcw size={12}/>重置演示</button>}
+          </div>
+        </div>}
       </div>
 
       <section className="how-it-works" aria-label="冒险指南">
@@ -179,10 +195,10 @@ export default function App() {
           { icon: Trophy, title: '收获你的通关时刻', text: '达成小目标，把今天的成就感收入囊中。', label: '快乐升级' },
         ].map((step, i) => <div className={`guide-step guide-step-${i + 1}`} key={step.title}><div className="step-top"><span className="step-icon"><step.icon size={23}/></span><span className="step-number">0{i + 1}</span></div><div><h3>{step.title}</h3><p>{step.text}</p></div><span className="step-label">{step.label}<ArrowRight size={14}/></span></div>)}
       </section>
-      <div className="demo-notice"><Sparkles size={15}/><span>原型体验说明：按钮模拟计数与攻击；摄像头、姿态识别和 AI 评价均未接入。上方三步为未来正式玩法。</span></div>
+      <div className="demo-notice"><Sparkles size={15}/><span>第二阶段说明：可手动开启摄像头查看真实骨骼关键点；动作计数和攻击仍由按钮模拟。未接入自动深蹲计数、真实攻击联动或 AI 评价。</span></div>
     </main>
     <footer><span>GymGoGo <span className="footer-dot">·</span> 让运动多一点好玩。</span><span>MADE FOR YOUR NEXT LITTLE WIN <Heart size={12}/></span></footer>
 
-    {help && <div className="modal-overlay" onClick={() => { setHelp(false); helpButton.current?.focus() }}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e=>e.stopPropagation()}><button ref={closeButton} className="close-button" aria-label="关闭玩法说明" onClick={() => { setHelp(false); helpButton.current?.focus() }}><X size={21}/></button><span className="modal-icon"><Swords size={27}/></span><div className="eyebrow">YOUR FIRST ADVENTURE</div><h2 id="help-title">先来一场小小的冒险</h2><p>这是第一阶段的界面演示，不会请求摄像头权限，也不需要实际做深蹲。</p><ol><li>点击「开始挑战」，启动本局计时。</li><li>点击「模拟完成一次深蹲」，次数加一、怪兽扣除 10 点生命值。</li><li>完成 10 次模拟后通关，可重新挑战或中途重置。</li></ol><div className="modal-note"><ShieldCheck size={18}/> 暂无摄像头识别、真实训练数据或 AI 评价。</div></section></div>}
+    {help && <div className="modal-overlay" onClick={() => { setHelp(false); helpButton.current?.focus() }}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e=>e.stopPropagation()}><button ref={closeButton} className="close-button" aria-label="关闭玩法说明" onClick={() => { setHelp(false); helpButton.current?.focus() }}><X size={21}/></button><span className="modal-icon"><Swords size={27}/></span><div className="eyebrow">YOUR FIRST ADVENTURE</div><h2 id="help-title">先来一场小小的冒险</h2><p>第二阶段有两个独立体验：摄像头查看真实骨骼，按钮模拟游戏。</p><ol><li>点击「开启摄像头」并亲自授权，全身入镜后可查看关键点。随时点击关闭即可停止采集。</li><li>点击「开始挑战」启动模拟计时，再点击「模拟完成一次深蹲」触发一次攻击。</li><li>完成 10 次按钮模拟后通关，可重新挑战；真实动作不会增加次数。</li></ol><div className="modal-note"><ShieldCheck size={18}/> 原始视频仅本地处理，不录制、不上传；自动计数与 AI 未接入。</div></section></div>}
   </div>
 }

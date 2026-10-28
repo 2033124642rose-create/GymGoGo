@@ -9,6 +9,14 @@
 - `2026-10-28-playful-mobile-guide.jpg`：390px 窄屏指南视口，检查实际文字与卡片布局。
 - `2026-10-28-forest-story-desktop.jpg`：第三轮反馈后 1440px 桌面，居中大标题与统一森林营地视觉。
 - `2026-10-28-forest-story-mobile-hero.jpg`：390px 手机首屏，主次标题与森林场景。
+- `2026-10-28-phase2-camera-idle-desktop.jpg`：第二阶段摄像头默认关闭的完整桌面页面。
+- `2026-10-28-phase2-camera-idle-mobile.jpg`：390px 营地与模拟游戏分区，不包含真人画面。
+- `2026-10-28-phase2-real-model-smoke.jpg`：真实 MediaPipe Worker 对程序生成空白帧的推理结果，不使用摄像头。
+- `2026-10-28-training-screen-desktop.jpg`：UX-001 训练大屏，1440px 桌面、摄像头关闭。
+- `2026-10-28-training-screen-mobile.jpg`：UX-001 训练大屏，390px 视口、摄像头关闭。
+- `2026-10-28-battle-screen-desktop.jpg`：修订后的战斗大屏，1440px，模拟 3 / 10、摄像头关闭。
+- `2026-10-28-battle-screen-laptop.jpg`：1366 × 768 笔记本布局，双区与巨大计数。
+- `2026-10-28-battle-screen-mobile.jpg`：390px 双区战斗布局，非真人画面。
 
 截图来自真实浏览器页面，仅证明当时原型展示，不代表用户已认可最终风格。
 
