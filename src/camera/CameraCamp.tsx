@@ -6,7 +6,7 @@ import { EMPTY_GROUPS } from './pose'
 import type { PoseFrame } from './pose'
 import { containFrame, isolateTrainingScreen } from './trainingScreen'
 import { LocalCuePlayer, StableStatusAnnouncer } from './trainingFeedback'
-import type { SoundMode } from './trainingFeedback'
+import type { SoundMode, ChallengeCue } from './trainingFeedback'
 import type { RefObject } from 'react'
 
 export interface BattleRecognition { title: string; hint: string; kind: string }
@@ -15,6 +15,7 @@ interface CameraCampProps {
   onImmersiveChange?: (value: boolean) => void
   onRecognitionChange?: (value: BattleRecognition) => void
   onPoseFrame?: (value: PoseFrame | null) => void
+  challengeCue?: ChallengeCue
   countingMode?: boolean
 }
 
@@ -26,7 +27,7 @@ const TRACKING_TEXT = {
 } as const
 const GROUP_NAMES = { shoulders: '肩膀', hips: '髋部', knees: '膝盖', ankles: '脚踝' } as const
 
-export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitionChange, onPoseFrame, countingMode = false }: CameraCampProps = {}) {
+export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitionChange, onPoseFrame, challengeCue, countingMode = false }: CameraCampProps = {}) {
   const root = useRef<HTMLElement>(null)
   const stage = useRef<HTMLDivElement>(null)
   const enterButton = useRef<HTMLButtonElement>(null)
@@ -42,6 +43,7 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
   const [soundEnabled, setSoundEnabled] = useState(true)
   const soundEnabledRef = useRef(true)
   const [soundMode, setSoundMode] = useState<SoundMode>('ready')
+  const [soundDetail, setSoundDetail] = useState('')
   const [area, setArea] = useState({ width: 0, height: 0 })
   const video = useRef<HTMLVideoElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -52,7 +54,7 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
   const setScreen = (value: boolean) => { setImmersive(value); onImmersiveChange?.(value) }
   useEffect(() => {
     let alive = true
-    const cues = new LocalCuePlayer(mode => { if (alive) setSoundMode(mode) })
+    const cues = new LocalCuePlayer((mode, detail = '') => { if (alive) { setSoundMode(mode); setSoundDetail(detail) } })
     const announcements = new StableStatusAnnouncer(cues)
     player.current = cues
     announcer.current = announcements
@@ -64,7 +66,6 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
     immersiveRef.current = false
     setScreen(false)
     setNativeFullscreen(false)
-    announcer.current?.dispose()
     if (document.fullscreenElement === screenElement()) void document.exitFullscreen?.().catch(() => {})
   }
 
@@ -101,7 +102,6 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
         setNativeFullscreen(false)
         immersiveRef.current = false
         setScreen(false)
-        announcer.current?.dispose()
       }
     }
     document.addEventListener('fullscreenchange', changed)
@@ -140,8 +140,9 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
   }, [immersive, ratio])
 
   useEffect(() => {
-    announcer.current?.update(immersive && soundEnabled && state.phase === 'running' ? state.tracking : null)
-  }, [immersive, soundEnabled, state.phase, state.tracking])
+    announcer.current?.update(soundEnabled && state.phase === 'running' ?
+      (challengeCue && (state.tracking === 'tracked' || challengeCue === 'countdown' || challengeCue === 'won') ? challengeCue : state.tracking) : null)
+  }, [soundEnabled, state.phase, state.tracking, challengeCue])
   useEffect(() => {
     const session = new CameraController(video.current!, canvas.current!, next => {
       setState(next)
@@ -168,11 +169,13 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
       hint, kind: state.phase === 'error' ? 'error' : state.phase === 'running' ? state.tracking : 'idle' })
   }, [state.phase, state.tracking, largeTitle, hint, onRecognitionChange])
   const fit = containFrame(area.width, area.height, ratio)
-  const soundHint = !soundEnabled ? '声音已关闭，可只看大字状态。' :
-    soundMode === 'blocked' ? '浏览器限制了声音，请点击「试听提示」重新启用。' :
-    soundMode === 'unsupported' ? '此浏览器无法播放声音，请根据大字状态判断。' :
-    soundMode === 'speech' ? '本地中文语音 · 稳定变更才播报。' :
-    soundMode === 'tone' ? '本地提示音 · 上扬双音表示成功，下行双音提示入镜。' : '声音仅在战斗大屏中启用，可点击试听。'
+  const soundHint = !soundEnabled ? '语音提示已关闭。' : soundDetail || (
+    soundMode === 'blocked' ? '声音被阻止，请点击「测试语音」启用。' :
+    soundMode === 'unsupported' ? '本地语音不可用，请查看屏幕状态。' :
+    soundMode === 'starting' ? '正在等待中文语音启动…' :
+    soundMode === 'speech' ? '中文语音播放正常，仅在有效状态变化时提醒。' :
+    soundMode === 'tone' ? '当前使用提示音备用，请点击「测试语音」重试中文语音。' :
+    '点击「测试语音」确认声音，再走远训练；无需开启麦克风。')
 
   return <section ref={root} className={`camera-camp ${immersive ? 'is-immersive' : ''}`} role={immersive && !screenRoot ? 'dialog' : undefined}
     aria-modal={immersive && !screenRoot ? true : undefined} aria-label={immersive && !screenRoot ? '沉浸式游戏战斗模式' : '真实摄像头与姿态识别'}>
@@ -203,22 +206,23 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
       {Object.entries(GROUP_NAMES).map(([key, name]) => <span key={key} className={state.groups[key as keyof typeof GROUP_NAMES] ? 'visible' : ''}><i/>{name}{state.groups[key as keyof typeof GROUP_NAMES] ? '可见' : '待入镜'}</span>)}
     </div>}
     <div className="camera-controls">
-      {!active ? <button className="camera-toggle" onClick={() => void controller.current?.start()}><Camera size={17}/>{state.phase === 'error' ? '重试开启摄像头' : '开启摄像头'}</button> :
+      {!active ? <button className="camera-toggle" onClick={() => { if (soundEnabledRef.current) void player.current?.unlock(); void controller.current?.start() }}><Camera size={17}/>{state.phase === 'error' ? '重试开启摄像头' : '开启摄像头'}</button> :
         <button className="camera-stop" onClick={() => controller.current?.stop()}>{busy ? <X size={17}/> : <CameraOff size={17}/>} {busy ? '取消并关闭摄像头' : '关闭摄像头'}</button>}
-      {immersive && <>
+      <>
         <button className="training-sound-button" aria-pressed={soundEnabled} onClick={() => {
           const enabled = !soundEnabled; soundEnabledRef.current = enabled; setSoundEnabled(enabled)
           if (enabled) void player.current?.unlock()
-          else announcer.current?.dispose()
-        }}>{soundEnabled ? <Volume2 size={18}/> : <VolumeX size={18}/>}声音提示：{soundEnabled ? '开' : '关'}</button>
+          else announcer.current?.update(null)
+        }}>{soundEnabled ? <Volume2 size={18}/> : <VolumeX size={18}/>}语音提示：{soundEnabled ? '开' : '关'}</button>
         <button className="training-sound-test" onClick={() => {
           soundEnabledRef.current = true; setSoundEnabled(true)
-          void player.current?.unlock().then(() => { if (immersiveRef.current && soundEnabledRef.current) player.current?.play('tracked', true) })
-        }}>试听提示</button>
-      </>}
+          player.current?.testVoice()
+        }}>测试语音</button>
+      </>
     </div>
     <p className="camera-scope"><ShieldCheck size={13}/>{countingMode ? '真实挑战中明显下蹲并起立即可攻击，不评价姿势是否标准。视频仅本地处理。' : '按钮演示模式：真实姿态不会增加模拟次数。'}</p>
-    {immersive && <div className="training-screen-notes"><span>{soundHint} 试听不是识别结果。</span><span>{screenNotice} · 退出大屏不关闭摄像头。</span></div>}
+    <p className="training-voice-status" role="status" aria-live="polite">{soundHint}</p>
+    {immersive && <div className="training-screen-notes"><span>{screenNotice} · 退出大屏不关闭摄像头；语音开关独立于战斗音效。</span></div>}
     </div>
   </section>
 }

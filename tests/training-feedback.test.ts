@@ -91,7 +91,7 @@ describe('local-only audio policy', () => {
     player.dispose()
     expect(close).toHaveBeenCalledOnce()
   })
-  it('prefers short game tones even when a local speech voice exists',async()=>{
+  it('restores local Chinese speech ahead of tones when both are available',async()=>{
     const speak=vi.fn(),start=vi.fn()
     vi.stubGlobal('SpeechSynthesisUtterance',class{})
     vi.stubGlobal('speechSynthesis',{getVoices:()=>[{lang:'zh-CN',localService:true}],speak,cancel:vi.fn()})
@@ -100,8 +100,8 @@ describe('local-only audio policy', () => {
       createOscillator(){return{type:'',frequency:{value:0},connect:vi.fn(),disconnect:vi.fn(),start,stop:vi.fn(),onended:null}}
       createGain(){return{gain:{setValueAtTime:vi.fn(),linearRampToValueAtTime:vi.fn(),exponentialRampToValueAtTime:vi.fn()},connect:vi.fn(),disconnect:vi.fn()}}
     })
-    const player=new LocalCuePlayer(vi.fn());expect(await player.unlock()).toBe('tone');player.play('tracked')
-    expect(start).toHaveBeenCalledTimes(2);expect(speak).not.toHaveBeenCalled();player.dispose()
+    const player=new LocalCuePlayer(vi.fn());expect(await player.unlock()).toBe('ready');player.play('tracked')
+    expect(start).not.toHaveBeenCalled();expect(speak).toHaveBeenCalledOnce();player.dispose()
   })
   it('reports a suspended audio context when the browser rejects playback', async () => {
     vi.stubGlobal('AudioContext', class {
@@ -125,5 +125,84 @@ describe('local-only audio policy', () => {
     await vi.advanceTimersByTimeAsync(1500)
     expect(await mode).toBe('blocked')
     player.dispose()
+  })
+})
+
+function mockSpeech() {
+  const engine = new EventTarget()
+  const voice = {lang:'zh-CN',localService:true} as SpeechSynthesisVoice
+  const getVoices = vi.fn(() => [voice])
+  const speak = vi.fn(), cancel = vi.fn()
+  vi.stubGlobal('SpeechSynthesisUtterance', class { constructor(public text:string) {} })
+  vi.stubGlobal('speechSynthesis', Object.assign(engine,{getVoices,speak,cancel}))
+  vi.stubGlobal('AudioContext',undefined)
+  return {engine,getVoices,speak,cancel}
+}
+
+describe('speech startup, failure visibility and phase transitions',()=>{
+  it('speaks synchronously on a test click and reports success only on actual start',()=>{
+    const {speak}=mockSpeech(), mode=vi.fn()
+    const player=new LocalCuePlayer(mode)
+    player.testVoice()
+    expect(speak).toHaveBeenCalledOnce()
+    expect(mode).toHaveBeenLastCalledWith('starting',expect.any(String))
+    const utterance=speak.mock.calls[0][0] as SpeechSynthesisUtterance
+    expect(utterance.text).toContain('语音提示已开启')
+    utterance.onstart?.({} as SpeechSynthesisEvent)
+    expect(mode).toHaveBeenLastCalledWith('speech',expect.any(String))
+    player.dispose()
+  })
+  it('reports not-allowed rather than claiming that queued speech was heard',()=>{
+    const {speak}=mockSpeech(),mode=vi.fn(),player=new LocalCuePlayer(mode)
+    player.play('tracked')
+    speak.mock.calls[0][0].onerror({error:'not-allowed'})
+    expect(mode).toHaveBeenLastCalledWith('unsupported',expect.stringContaining('浏览器阻止了语音'))
+    player.dispose()
+  })
+  it('surfaces a silent start timeout and never falls back after intentional mute',()=>{
+    vi.useFakeTimers()
+    const {speak,cancel}=mockSpeech(),mode=vi.fn(),player=new LocalCuePlayer(mode)
+    player.play('tracked');vi.advanceTimersByTime(2500)
+    expect(mode).toHaveBeenLastCalledWith('unsupported',expect.stringContaining('未能启动'))
+    player.play('lost')
+    const old=speak.mock.calls[1][0]
+    player.silence();mode.mockClear()
+    old.onerror({error:'canceled'});vi.advanceTimersByTime(5000)
+    expect(mode).not.toHaveBeenCalled();expect(cancel).toHaveBeenCalled()
+    player.dispose()
+  })
+  it('handles a late voiceschanged list without auto-playing or requesting any device',()=>{
+    const {engine,getVoices,speak}=mockSpeech(),mode=vi.fn()
+    getVoices.mockReturnValue([])
+    const player=new LocalCuePlayer(mode)
+    getVoices.mockReturnValue([{lang:'zh-CN',localService:true} as SpeechSynthesisVoice])
+    engine.dispatchEvent(new Event('voiceschanged'))
+    expect(mode).toHaveBeenLastCalledWith('ready',expect.stringContaining('已加载'))
+    expect(speak).not.toHaveBeenCalled()
+    player.testVoice();expect(speak).toHaveBeenCalledOnce()
+    player.dispose();mode.mockClear()
+    engine.dispatchEvent(new Event('voiceschanged'));expect(mode).not.toHaveBeenCalled()
+  })
+  it('does not delay confirmed countdown / start or repeat them per frame',()=>{
+    const {player,announcer}=setup()
+    announcer.update('tracked');vi.advanceTimersByTime(1200)
+    for(let i=0;i<30;i++)announcer.update('countdown')
+    expect(player.play).toHaveBeenLastCalledWith('countdown')
+    announcer.update('started')
+    for(let i=0;i<30;i++)announcer.update('started')
+    expect(player.play).toHaveBeenLastCalledWith('started')
+    expect(player.play).toHaveBeenCalledTimes(3)
+    announcer.update('won');expect(player.play).toHaveBeenLastCalledWith('won')
+    announcer.dispose()
+  })
+  it('cancels a queued phase / tracking cue on reset and allows the next explicit round',()=>{
+    const {player,announcer}=setup()
+    announcer.update('countdown');announcer.update('lost');announcer.update(null)
+    vi.advanceTimersByTime(5000)
+    expect(player.play).toHaveBeenCalledTimes(1)
+    announcer.update('tracked');vi.advanceTimersByTime(1200)
+    expect(player.play).toHaveBeenLastCalledWith('tracked')
+    announcer.update('countdown');expect(player.play).toHaveBeenCalledTimes(3)
+    announcer.dispose()
   })
 })

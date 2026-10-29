@@ -103,10 +103,10 @@ describe('immersive mode retains the original camera session', () => {
   it('offers an accessible mute toggle and traps focus inside the screen', () => {
     render(createElement(CameraCamp))
     fireEvent.click(screen.getByRole('button', { name: '战斗大屏' }))
-    const mute = screen.getByRole('button', { name: '声音提示：开' })
+    const mute = screen.getByRole('button', { name: '语音提示：开' })
     fireEvent.click(mute)
-    expect(screen.getByRole('button', { name: '声音提示：关' }).getAttribute('aria-pressed')).toBe('false')
-    const test = screen.getByRole('button', { name: '试听提示' })
+    expect(screen.getByRole('button', { name: '语音提示：关' }).getAttribute('aria-pressed')).toBe('false')
+    const test = screen.getByRole('button', { name: '测试语音' })
     test.focus(); fireEvent.keyDown(window, { key: 'Tab' })
     expect(document.activeElement).toBe(screen.getByRole('button', { name: '系统全屏' }))
     fireEvent.click(screen.getByRole('button', { name: '退出大屏' }))

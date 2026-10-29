@@ -290,7 +290,7 @@ export default function App() {
 
         <aside className="training-panel" aria-label="训练控制区域">
           <div className="panel-title"><span><Leaf size={19}/> 冒险者营地</span><span className="local-tag">画面留在本地</span></div>
-          <CameraCamp screenRoot={battleRoot} onImmersiveChange={setBattleImmersive} onRecognitionChange={setRecognition} onPoseFrame={handlePoseFrame} countingMode={mode==='real'}/>
+          <CameraCamp challengeCue={mode==='real' ? ready.phase==='countdown' ? 'countdown' : phase==='active' ? 'started' : phase==='won' ? 'won' : undefined : undefined} screenRoot={battleRoot} onImmersiveChange={setBattleImmersive} onRecognitionChange={setRecognition} onPoseFrame={handlePoseFrame} countingMode={mode==='real'}/>
           <div className="camp-simulation" hidden={battleImmersive}>
           {modeControls()}
           <div className="simulation-heading"><strong>{mode==='real'?'真实深蹲挑战':'按钮模拟挑战'}</strong><small>切换模式会清空本局</small></div>

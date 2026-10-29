@@ -132,3 +132,10 @@
   .is-immersive .joint-status { margin-bottom:5px; }
   .is-immersive .training-exit-button { min-height:35px; padding:6px 12px; }
 }
+
+/* Voice controls remain accessible outside immersive mode as well. */
+.camera-controls { flex-wrap:wrap; gap:8px; }
+.camera-toggle,.camera-stop { flex-basis:100%; }
+.training-voice-status { color:#e5edc2; font-size:13px; line-height:1.65; margin:8px 0 0; }
+.is-battle-immersive .camera-toggle,.is-battle-immersive .camera-stop,.is-immersive .camera-toggle,.is-immersive .camera-stop { flex-basis:auto; }
+.is-battle-immersive .training-voice-status { font-size:12px; }
