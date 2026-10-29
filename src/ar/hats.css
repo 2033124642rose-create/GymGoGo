@@ -1,0 +1,9 @@
+.camp-hat-overlay { position:absolute; inset:0; width:100%; height:100%; transform:scaleX(-1); pointer-events:none; z-index:1; overflow:hidden; }
+.camp-hat-status { position:absolute; bottom:9px; left:9px; z-index:2; max-width:calc(100% - 18px); padding:5px 9px; border-radius:9px; color:#e7f3c3; background:#15291de6; font-size:11px; line-height:1.5; pointer-events:none; }
+.party-player-setup { display:grid; grid-template-columns:minmax(0,1fr) 70px; gap:10px; padding:15px; border:1px solid #bbd68d44; border-radius:15px; background:#1a2f23; }
+.party-player-setup>label { grid-column:1/-1; }
+.party-player-setup .party-hat-choice { grid-column:1; }
+.party-hat-choice select { min-width:0; width:100%; font:inherit; padding:10px; border:1px solid #b6cd8b66; border-radius:10px; background:#17271e; color:#edf4c9; }
+.party-hat-preview { width:70px; height:65px; align-self:end; object-fit:contain; }
+.party-roster .party-roster-hat { display:flex; align-items:center; gap:7px; }
+.party-roster-hat img { width:37px; height:34px; object-fit:contain; }

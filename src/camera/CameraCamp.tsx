@@ -1,3 +1,6 @@
+import HatOverlay from '../ar/HatOverlay'
+import type { HatOverlayHandle } from '../ar/HatOverlay'
+import type { HatId } from '../ar/hats'
 import { useEffect, useRef, useState } from 'react'
 import { Camera, CameraOff, CircleCheck, Expand, Leaf, LoaderCircle, LogOut, ShieldCheck, Volume2, VolumeX, X } from 'lucide-react'
 import { CameraController } from './CameraController'
@@ -16,6 +19,7 @@ interface CameraCampProps {
   onRecognitionChange?: (value: BattleRecognition) => void
   onPoseFrame?: (value: PoseFrame | null) => void
   challengeCue?: ChallengeCue
+  hat?: { id: HatId; playerId: string }
   countingMode?: boolean
 }
 
@@ -27,7 +31,7 @@ const TRACKING_TEXT = {
 } as const
 const GROUP_NAMES = { shoulders: '肩膀', hips: '髋部', knees: '膝盖', ankles: '脚踝' } as const
 
-export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitionChange, onPoseFrame, challengeCue, countingMode = false }: CameraCampProps = {}) {
+export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitionChange, onPoseFrame, challengeCue, hat, countingMode = false }: CameraCampProps = {}) {
   const root = useRef<HTMLElement>(null)
   const stage = useRef<HTMLDivElement>(null)
   const enterButton = useRef<HTMLButtonElement>(null)
@@ -47,6 +51,7 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
   const [area, setArea] = useState({ width: 0, height: 0 })
   const video = useRef<HTMLVideoElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
+  const hatLayer = useRef<HatOverlayHandle>(null)
   const controller = useRef<CameraController | null>(null)
   const [ratio, setRatio] = useState(4 / 3)
   const [state, setState] = useState<CameraState>({ phase: 'idle', tracking: 'waiting', groups: { ...EMPTY_GROUPS }, message: '' })
@@ -147,7 +152,11 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
     const session = new CameraController(video.current!, canvas.current!, next => {
       setState(next)
       if (next.phase === 'idle' || next.phase === 'error') setRatio(4 / 3)
-    }, undefined, frame => onPoseFrame?.(frame))
+    }, undefined, frame => {
+      // Decoration is isolated: a rendering error must never block the accepted counting callback.
+      try { hatLayer.current?.update(frame,video.current?.videoWidth || canvas.current?.width || 0,video.current?.videoHeight || canvas.current?.height || 0) } catch { /* Decorative layer only. */ }
+      onPoseFrame?.(frame)
+    })
     controller.current = session
     const leave = () => session.stop()
     window.addEventListener('pagehide', leave)
@@ -193,6 +202,7 @@ export default function CameraCamp({ screenRoot, onImmersiveChange, onRecognitio
         onLoadedMetadata={() => { if (video.current?.videoHeight) setRatio(video.current.videoWidth / video.current.videoHeight) }}
         onResize={() => { if (video.current?.videoHeight) setRatio(video.current.videoWidth / video.current.videoHeight) }}/>
       <canvas ref={canvas} className="camp-skeleton" aria-label="人体骨骼关键点叠加层"/>
+      {hat && <HatOverlay ref={hatLayer} hat={hat.id} playerId={hat.playerId}/>}
       <span className={`camp-video-label ${live ? 'live' : ''}`}><i/>{live ? '本地画面 · 镜像显示' : '观测未开启'}</span>
       {!live && <div className="camp-camera-empty"><span className="camp-camera-emblem"><Camera size={30}/></span><strong>营地观测区</strong><span>整装待发，让身体成为冒险的主角。</span><small>画面不上传 · 不录制 · 不保存</small></div>}
       {state.phase === 'loading' && <div className="camp-loading"><LoaderCircle size={17}/> 正在准备骨骼识别…</div>}

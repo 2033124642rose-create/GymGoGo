@@ -3,6 +3,9 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../src/App'
 import { makeSequence } from './squat-fixtures'
+import { headFrame } from './hat-fixtures'
+import { HeadTracker } from '../src/ar/headTracking'
+import type { HatId } from '../src/ar/hats'
 
 class FakeWorker {
   static instances: FakeWorker[]=[]
@@ -27,11 +30,12 @@ beforeEach(()=>{
   vi.stubGlobal('fetch',vi.fn())
 })
 afterEach(()=>{cleanup();vi.unstubAllGlobals()})
-function setupParty(names=['测试甲','测试乙']) {
+function setupParty(names=['测试甲','测试乙'], hats?:HatId[]) {
   render(createElement(App))
   fireEvent.click(screen.getByRole('button',{name:'创建本地派对'}))
   fireEvent.change(screen.getByLabelText('玩家人数'),{target:{value:String(names.length)}})
   names.forEach((name,i)=>fireEvent.change(screen.getByLabelText(`玩家 ${i+1} 昵称`),{target:{value:name}}))
+  hats?.forEach((hat,i)=>fireEvent.change(screen.getByLabelText(`玩家 ${i+1} 帽子`),{target:{value:hat}}))
   fireEvent.click(screen.getByRole('button',{name:'创建派对 · 进入第一关'}))
 }
 async function camera() {
@@ -73,6 +77,7 @@ describe('party first level UI + real counter + existing camera integration (syn
     s.rep();expect(hp()).toBe('20');expect(screen.getByRole('button',{name:'下一位玩家'})).toBeTruthy()
     s.rep();expect(hp()).toBe('20')
     fireEvent.click(screen.getByRole('button',{name:'下一位玩家'}));expect(current()).toContain('测试乙')
+    expect(screen.getByLabelText('派对 AR 帽子叠加层').getAttribute('data-hat')).toBe('pirate')
     s.rep();expect(hp()).toBe('20');s.start();s.rep();expect(hp()).toBe('10')
     expect(document.querySelectorAll('.party-roster article')[0].textContent).toContain('2 / 2')
   })
@@ -132,4 +137,40 @@ it('switching from the old camera to party setup releases the original stream be
   for(let i=0;i<2;i++)fireEvent.change(screen.getByLabelText(`玩家 ${i+1} 昵称`),{target:{value:`P${i+1}`}})
   fireEvent.click(screen.getByRole('button',{name:'创建派对 · 进入第一关'}))
   expect(getMedia).toHaveBeenCalledTimes(1)
+})
+
+
+describe('party hat wiring without changing accepted game rules',()=>{
+  it('stores all four chosen hats, while original single mode never mounts an overlay',()=>{
+    render(createElement(App));expect(screen.queryByLabelText('派对 AR 帽子叠加层')).toBeNull();cleanup()
+    setupParty(['P1','P2','P3','P4'],['crown','pirate','wizard','party'])
+    expect(Array.from(document.querySelectorAll('.party-roster-hat')).map(el=>el.textContent)).toEqual(['皇冠','海盗帽','魔法帽','派对帽'])
+    expect(screen.getByLabelText('派对 AR 帽子叠加层').getAttribute('data-hat')).toBe('crown')
+    expect(getMedia).not.toHaveBeenCalled()
+  })
+  it('updates the hat on skip without restarting video; lost head hides and return restores',async()=>{
+    setupParty(['P1','P2'],['wizard','party']);const s=await camera()
+    const video=screen.getByLabelText('本地摄像头实时画面')
+    Object.defineProperty(video,'videoWidth',{configurable:true,value:640});Object.defineProperty(video,'videoHeight',{configurable:true,value:480})
+    const reply=(frame:ReturnType<typeof headFrame>)=>act(()=>s.worker.reply({type:'result',...frame}))
+    reply(headFrame(100));let svg=screen.getByLabelText('派对 AR 帽子叠加层')
+    expect(svg.querySelector('g')!.style.display).toBe('')
+    fireEvent.click(screen.getByRole('button',{name:'跳过本回合'}));svg=screen.getByLabelText('派对 AR 帽子叠加层')
+    expect(svg.getAttribute('data-hat')).toBe('party');expect(svg.getAttribute('data-player')).toBe('player-2')
+    expect(svg.querySelector('g')!.style.display).toBe('none')
+    reply(headFrame(200,.1));expect(svg.querySelector('g')!.style.display).toBe('')
+    const lost=headFrame(300);lost.landmarks=[];reply(lost)
+    expect(svg.querySelector('g')!.style.display).toBe('none')
+    reply(headFrame(400));expect(svg.querySelector('g')!.style.display).toBe('')
+    expect(screen.getByLabelText('本地摄像头实时画面')).toBe(video);expect(getMedia).toHaveBeenCalledTimes(1)
+    expect(hp()).toBe('40')
+    fireEvent.click(screen.getByRole('button',{name:'关闭摄像头'}));expect(svg.querySelector('g')!.style.display).toBe('none')
+  })
+  it('decoration failures cannot block automatic start, valid reps or attacks',async()=>{
+    setupParty();const s=await camera()
+    vi.spyOn(HeadTracker.prototype,'update').mockImplementation(()=>{throw new Error('synthetic decoration failure')})
+    s.start();s.rep();expect(hp()).toBe('30');s.rep();expect(hp()).toBe('20')
+    expect(screen.getByRole('button',{name:'下一位玩家'})).toBeTruthy()
+    expect(fetch).not.toHaveBeenCalled()
+  })
 })

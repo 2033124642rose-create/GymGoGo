@@ -1,10 +1,12 @@
+import { defaultHat, isHatId } from '../ar/hats'
+import type { HatId } from '../ar/hats'
 import { ReadyGate } from '../game/ReadyGate'
 import { SquatCounter } from '../squat/SquatCounter'
 import type { PoseFrame } from '../camera/pose'
 import { FIRST_LEVEL } from './levels'
 
 export type PartyPhase = 'ready' | 'preparing' | 'active' | 'turnComplete' | 'paused' | 'blocked' | 'won' | 'exited'
-export interface PartyPlayer { id: string; name: string; count: number }
+export interface PartyPlayer { id: string; name: string; count: number; hat: HatId }
 export interface PartySnapshot {
   phase: PartyPhase; players: PartyPlayer[]; currentId: string; queue: string[];
   total: number; hp: number; maxHp: number; attempt: number; digit: number; stableMs: number;
@@ -30,10 +32,11 @@ export class PartySession {
   private counter: SquatCounter | null = null
   private gate = new ReadyGate()
   private message = '下一位冒险者，请主动准备。'
-  constructor(names: string[]) {
+  constructor(names: string[], hats: HatId[] = names.map((_,index) => defaultHat(index))) {
     const error = validateNames(names)
     if (error) throw new Error(error)
-    this.players = names.map((name, index) => ({ id: `player-${index + 1}`, name: name.trim(), count: 0 }))
+    if (hats.length !== names.length || hats.some(hat => !isHatId(hat))) throw new Error('请选择有效的帽子。')
+    this.players = names.map((name, index) => ({ id: `player-${index + 1}`, name: name.trim(), count: 0, hat: hats[index] }))
     this.queue = this.players.map(player => player.id)
     this.currentId = this.queue[0]
   }
