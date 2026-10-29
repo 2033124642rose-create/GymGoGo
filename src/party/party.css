@@ -52,3 +52,40 @@
 @media(max-height:760px) and (min-width:761px) { .party-footer .party-actions p { display:none; } }
 @media(prefers-reduced-motion:reduce) { .party-shell .monster,.party-shell .monster-body { animation:none; } }
 .party-setup>.eyebrow { font-size:12px; line-height:1.6; letter-spacing:.5px; }
+.party-level-path { display:flex; gap:6px; padding:12px 20px 0; flex-wrap:wrap; font-size:11px; }
+.party-level-path span { border:1px solid #b5ce8c33; color:#aabb9d; border-radius:8px; padding:5px 8px; }
+.party-level-path .current { color:#e7fac0; border-color:#b9dd8f; background:#bbd99114; }
+.party-level-path .cleared { color:#c5efa5; background:#bfd28e15; }
+.party-level-path .locked { opacity:.7; }
+.party-theme-mist .arena { background:linear-gradient(145deg,#35374b,#263332); border-color:#b9abd355; }
+.party-theme-castle .arena { background:linear-gradient(145deg,#354548,#27362c); border-color:#d2bc8a55; }
+.party-theme-mist .arena-hit .monster-body { animation:party-ghost-hit .45s ease-out; }
+.party-theme-castle .arena-hit .monster-body { animation:party-dragon-hit .45s ease-out; transform-origin:50% 85%; }
+@keyframes party-ghost-hit { 0%,100% { transform:translateX(0); opacity:1; } 20% { transform:translateX(-13px); opacity:.45; } 45% { transform:translateX(9px); } 70% { transform:translateX(-4px); } }
+@keyframes party-dragon-hit { 0%,100% { transform:rotate(0); } 25% { transform:rotate(-8deg) translateY(-6px); } 60% { transform:rotate(3deg); } }
+.party-final-overlay { position:fixed; inset:0; z-index:1600; padding:24px; display:grid; place-items:center; background:#0d1b16ec; overflow:auto; }
+.party-final-panel { width:min(940px,100%); max-height:100%; box-sizing:border-box; overflow:auto; border:1px solid #bed88d77; border-radius:25px; padding:22px; background:radial-gradient(ellipse at 50% 0,#3d5937,#21372a 75%); color:#e9f4ca; box-shadow:0 15px 70px #0006; }
+.party-final-emblem { width:48px; height:48px; border-radius:17px; background:#d5e58f25; display:grid; place-items:center; color:#e9e3a1; margin-bottom:8px; }
+.party-final-panel h2 { font-size:clamp(27px,3vw,38px); margin:8px 0; }
+.party-final-panel>p { color:#c4d6ae; line-height:1.5; margin:8px 0; }
+.party-final-totals { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:16px 0; }
+.party-final-totals>span { display:flex; flex-direction:column; gap:6px; background:#12291e66; padding:12px; border-radius:13px; color:#c8d7ad; }
+.party-final-totals strong { font-size:28px; line-height:1.2; color:#eaffca; }
+.party-final-totals small { font-size:11px; }
+.party-rewards { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0; }
+.party-rewards>span { display:flex; align-items:center; gap:7px; padding:9px 12px; border:1px solid #d3db9577; color:#eee3ac; background:#c3ca8810; border-radius:12px; }
+.party-contribution-table { overflow:auto; margin:14px 0; }
+.party-contribution-table table { width:100%; border-collapse:collapse; white-space:nowrap; }
+.party-contribution-table th,.party-contribution-table td { padding:10px; border-bottom:1px solid #c9d79c33; text-align:left; }
+.party-contribution-table th { color:#ddedbd; font-weight:600; }
+.party-contribution-table tbody th { white-space:normal; overflow-wrap:anywhere; min-width:110px; }
+.party-contribution-table th img { width:32px; height:27px; object-fit:contain; vertical-align:middle; margin-right:6px; }
+.party-final-note { font-size:12px; }
+.party-final-actions { display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; }
+.party-final-actions button { cursor:pointer; border:1px solid #bdcf8c77; color:#e0efc1; background:#3a5031; border-radius:12px; font:inherit; padding:12px 18px; }
+.party-final-actions .primary-button { color:#20351e; background:#a5ef3f; }
+.is-battle-immersive .party-level-path { padding-top:7px; font-size:10px; }
+.is-battle-immersive .party-level-path span { padding:3px 6px; }
+@media(max-width:650px) { .party-final-overlay { padding:10px; } .party-final-panel { padding:18px; } .party-final-totals { grid-template-columns:1fr; gap:7px; } .party-final-totals>span { padding:10px; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; } .party-final-totals strong { font-size:23px; } }
+@media(prefers-reduced-motion:reduce) { .party-theme-mist .arena-hit .monster-body,.party-theme-castle .arena-hit .monster-body { animation:none; } }
+.party-final-actions { position:sticky; bottom:0; margin-top:12px; padding:10px 0; background:#21372af5; border-top:1px solid #b6cc8833; }

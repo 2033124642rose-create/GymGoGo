@@ -35,16 +35,16 @@ describe('local first-level party rules (synthetic data, no human accuracy claim
     s.rep();expect(s.game.snapshot().total).toBe(2)
     s.game.next(s.sequence.time);expect(s.game.snapshot().currentId).toBe('player-2')
     s.rep();expect(s.game.snapshot().total).toBe(2)
-    s.start();s.rep();s.rep();expect(s.game.snapshot()).toMatchObject({phase:'won',hp:0,total:4,queue:[]})
+    s.start();s.rep();s.rep();expect(s.game.snapshot()).toMatchObject({phase:'levelWon',hp:0,total:4,queue:[]})
     s.game.next(s.sequence.time);s.game.skip(s.sequence.time);s.rep()
-    expect(s.game.snapshot()).toMatchObject({phase:'won',total:4})
+    expect(s.game.snapshot()).toMatchObject({phase:'levelWon',total:4})
   })
   it('keeps partial counts on skip and resumes only the remaining target at the tail',()=>{
     const s=setup();s.start();s.rep();s.game.skip(s.sequence.time)
     expect(s.game.snapshot()).toMatchObject({phase:'ready',currentId:'player-2',hp:30,queue:['player-2','player-1']})
     s.start();s.rep();s.rep();s.game.next(s.sequence.time)
     expect(s.game.snapshot().currentId).toBe('player-1');s.start();s.rep()
-    expect(s.game.snapshot()).toMatchObject({phase:'won',total:4,hp:0})
+    expect(s.game.snapshot()).toMatchObject({phase:'levelWon',total:4,hp:0})
     expect(s.game.snapshot().players.map(p=>p.count)).toEqual([2,2])
   })
   it('blocks after every unfinished player skips and does not loop or damage; offers explicit resume/pause/exit',()=>{
@@ -61,7 +61,7 @@ describe('local first-level party rules (synthetic data, no human accuracy claim
   it('only unfinished players participate in all-skipped detection',()=>{
     const s=setup();s.start();s.rep();s.rep();s.game.next(s.sequence.time)
     s.game.skip(s.sequence.time);expect(s.game.snapshot()).toMatchObject({phase:'blocked',queue:['player-2'],hp:20})
-    s.game.resume(s.sequence.time);s.start();s.rep();s.rep();expect(s.game.snapshot().phase).toBe('won')
+    s.game.resume(s.sequence.time);s.start();s.rep();s.rep();expect(s.game.snapshot().phase).toBe('levelWon')
   })
   it('pause preserves contributions, ignores exercise, and requires a fresh baseline + countdown on resume',()=>{
     const s=setup();s.start();s.rep();s.feed(130,.08,500);s.game.pause(s.sequence.time)
@@ -102,7 +102,7 @@ describe('local first-level party rules (synthetic data, no human accuracy claim
   it('six players finish once each with consistent totals and no extra damage',()=>{
     const s=setup(['P1','P2','P3','P4','P5','P6'])
     for(let i=0;i<6;i++){if(i)s.game.next(s.sequence.time);s.start();s.rep();s.rep()}
-    expect(s.game.snapshot()).toMatchObject({phase:'won',total:12,hp:0,maxHp:120})
+    expect(s.game.snapshot()).toMatchObject({phase:'levelWon',total:12,hp:0,maxHp:120})
     expect(s.game.snapshot().players.every(p=>p.count===2)).toBe(true)
   })
 })

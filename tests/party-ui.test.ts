@@ -1,5 +1,5 @@
 import { createElement } from 'react'
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../src/App'
 import { makeSequence } from './squat-fixtures'
@@ -96,12 +96,12 @@ describe('party first level UI + real counter + existing camera integration (syn
     fireEvent.click(screen.getByRole('button',{name:'继续挑战'}));s.feed(175,0,6000);expect(hp()).toBe('30')
     s.start();s.feed(175,0,1000);expect(hp()).toBe('30');s.rep();expect(hp()).toBe('20')
   })
-  it('wins only the first level and never calls AI or unlocks another playable level',async()=>{
+  it('wins the first level once and unlocks the guarded second-level entry without AI',async()=>{
     setupParty();const s=await camera();s.start();s.rep();s.rep()
     fireEvent.click(screen.getByRole('button',{name:'下一位玩家'}));s.start();s.rep();s.rep()
     expect(hp()).toBe('0');expect(screen.getByText('第一关合作完成')).toBeTruthy()
-    expect(screen.getByText(/第二关及团队 AI 战报尚未开发/)).toBeTruthy()
-    expect(screen.queryByRole('button',{name:/下一关|生成.*战报/})).toBeNull()
+    expect(screen.getByRole('button',{name:'下一关 · 幽灵秘境'})).toBeTruthy()
+    expect(screen.queryByRole('button',{name:/生成.*战报/})).toBeNull()
     s.rep();expect(hp()).toBe('0');expect(fetch).not.toHaveBeenCalled()
   })
   it('retains camera and party progress through immersive entry/exit, with voice test available',async()=>{
@@ -172,5 +172,59 @@ describe('party hat wiring without changing accepted game rules',()=>{
     s.start();s.rep();expect(hp()).toBe('30');s.rep();expect(hp()).toBe('20')
     expect(screen.getByRole('button',{name:'下一位玩家'})).toBeTruthy()
     expect(fetch).not.toHaveBeenCalled()
+  })
+})
+
+
+describe('three-level actual UI progression with synthetic pose frames',()=>{
+  it('completes the campaign, retains camera/hats, and settles exact player/team contributions once',async()=>{
+    let now=100000;vi.spyOn(Date,'now').mockImplementation(()=>now)
+    setupParty();const s=await camera();const video=screen.getByLabelText('本地摄像头实时画面')
+    expect(screen.queryByRole('button',{name:/下一关/})).toBeNull()
+    for(let level=0;level<3;level++){
+      if(level){fireEvent.click(screen.getByRole('button',{name:level===1?'下一关 · 幽灵秘境':'下一关 · 巨龙城堡'}))}
+      expect(hp()).toBe(String((level+2)*20))
+      expect(screen.getByLabelText('本地摄像头实时画面')).toBe(video)
+      expect(screen.getByLabelText('派对 AR 帽子叠加层').getAttribute('data-hat')).toBe('crown')
+      if(level===1){expect(screen.getByRole('img',{name:'迷雾幽灵，受到 0 次真实攻击'})).toBeTruthy();await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'战斗大屏'}))})}
+      if(level===2)expect(screen.getByRole('img',{name:'城堡巨龙，受到 0 次真实攻击'})).toBeTruthy()
+      for(let player=0;player<2;player++){
+        if(player)fireEvent.click(screen.getByRole('button',{name:'下一位玩家'}))
+        s.start();for(let rep=0;rep<level+2;rep++){if(level===2&&player===1&&rep===3)now=275000;s.rep()}
+      }
+      expect(hp()).toBe('0')
+      if(level<2)expect(screen.queryByRole('dialog',{name:'三关全通！小队凯旋'})).toBeNull()
+    }
+    const final=screen.getByRole('dialog',{name:'三关全通！小队凯旋'})
+    expect(final.textContent).toContain('18 次');expect(final.textContent).toContain('02:55')
+    for(const reward of ['萌芽伙伴徽章','驱雾小队徽章','屠龙同盟徽章'])expect(within(final).getByText(reward)).toBeTruthy()
+    const rows=within(within(final).getByRole('table',{name:'最终全队贡献'})).getAllByRole('row').slice(1)
+    for(const row of rows)expect(within(row).getAllByRole('cell').map(cell=>cell.textContent)).toEqual(['2','3','4','9','50.0%'])
+    expect(getMedia).toHaveBeenCalledTimes(1);expect(fetch).not.toHaveBeenCalled()
+    expect(document.activeElement).toBe(final)
+    fireEvent.keyDown(window,{key:'Escape'})
+    expect(screen.queryByRole('dialog',{name:'三关全通！小队凯旋'})).toBeNull()
+    expect(screen.getByRole('dialog',{name:'沉浸式游戏战斗模式'})).toBeTruthy()
+    now=999000;s.rep();fireEvent.click(screen.getByRole('button',{name:'查看全队贡献'}))
+    expect(screen.getByRole('dialog',{name:'三关全通！小队凯旋'}).textContent).toContain('02:55')
+  })
+  it('can rest after a level reward and still needs explicit next-level entry and preparation',async()=>{
+    setupParty();const s=await camera();s.start();s.rep();s.rep();fireEvent.click(screen.getByRole('button',{name:'下一位玩家'}));s.start();s.rep();s.rep()
+    fireEvent.click(screen.getByRole('button',{name:'休息'}));s.rep();expect(hp()).toBe('0')
+    fireEvent.click(screen.getByRole('button',{name:'继续挑战'}))
+    expect(screen.getByRole('button',{name:'下一关 · 幽灵秘境'})).toBeTruthy()
+    expect(screen.queryByRole('button',{name:'准备挑战'})).toBeNull()
+    fireEvent.click(screen.getByRole('button',{name:'下一关 · 幽灵秘境'}));s.rep()
+    expect(hp()).toBe('60');expect(current()).toContain('0 / 3')
+    s.start();s.rep();expect(hp()).toBe('50')
+    expect(screen.getByRole('region',{name:'小队贡献'}).textContent).toContain('累计 3 次')
+  })
+  it('retains earned badges on early exit but never displays final campaign victory',async()=>{
+    setupParty();const s=await camera();s.start();s.rep();s.rep();fireEvent.click(screen.getByRole('button',{name:'下一位玩家'}));s.start();s.rep();s.rep()
+    fireEvent.click(screen.getByRole('button',{name:'退出本关'}));fireEvent.click(screen.getByRole('button',{name:'确认退出本关'}))
+    expect(screen.getByText('派对已结束 · 未完成三关')).toBeTruthy()
+    expect(screen.getByText(/已获 1 枚徽章，保留奖励/)).toBeTruthy()
+    expect(screen.queryByRole('dialog',{name:'三关全通！小队凯旋'})).toBeNull()
+    expect(track.stop).toHaveBeenCalledOnce()
   })
 })
