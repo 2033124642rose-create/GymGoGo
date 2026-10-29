@@ -1,0 +1,54 @@
+.party-wordmark { display:flex; align-items:center; gap:9px; color:var(--leaf-note); font-size:20px; }
+.party-shell .topbar { gap:14px; flex-wrap:wrap; }
+.party-shell .topbar>span { font-size:12px; color:#becbae; }
+.party-setup { max-width:760px; margin:50px auto; padding:28px; border:1px solid #b9d69044; border-radius:24px; background:#23372b; }
+.party-setup h1 { color:#e9f5c8; font-size:clamp(28px,4vw,44px); margin:16px 0; }
+.party-setup p { color:#c2cfb1; line-height:1.8; }
+.party-setup form { margin:24px 0; }
+.party-size { display:flex; align-items:center; gap:16px; font-size:18px; }
+.party-size select,.party-names input { color:#eff5d6; background:#17271e; border:1px solid #b5ce8855; border-radius:12px; padding:12px; font:inherit; min-width:0; }
+.party-names { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:24px 0; }
+.party-names label { display:grid; gap:8px; font-size:16px; }
+.party-names input { width:100%; box-sizing:border-box; }
+.party-setup [role=alert] { color:#ffe2a8; }
+.party-scope { display:flex; align-items:flex-start; gap:8px; font-size:13px; }
+.party-scope svg { flex-shrink:0; margin-top:4px; }
+.party-current { padding:18px; margin:16px 0; border-radius:16px; background:#cfed9510; border:1px solid #b5d18c55; display:grid; gap:6px; }
+.party-current span { color:#c3d39c; font-size:14px; }
+.party-current strong { font-size:28px; color:#e6f8bd; overflow-wrap:anywhere; }
+.party-current b { font-size:38px; color:#b7f154; }
+.party-current p { font-size:16px; color:#e1eabf; margin:0; }
+.party-actions { display:flex; flex-wrap:wrap; gap:9px; align-items:center; }
+.party-actions button,.party-result button,.party-sound button,.party-exit-dialog button { display:inline-flex; align-items:center; justify-content:center; gap:6px; color:#edf5cc; background:#3c5234; border:1px solid #b5cd8866; border-radius:12px; padding:11px 14px; font:inherit; cursor:pointer; }
+.party-actions .primary-button { background:#a5ef3f; color:#20351f; flex-basis:100%; }
+.party-actions p { flex-basis:100%; font-size:13px; color:#c4cfac; line-height:1.65; margin:3px 0; }
+.party-active { font-size:18px; color:#d5eaa5; flex-basis:100%; }
+.party-sound { display:flex; gap:7px; flex-wrap:wrap; margin-top:12px; font-size:12px; }
+.party-result { display:grid; gap:10px; padding:18px; border:1px solid #c5df8b77; border-radius:16px; color:#e8f2be; margin-top:15px; }
+.party-result strong { font-size:25px; }
+.party-result p { font-size:13px; line-height:1.6; }
+.party-roster { margin:24px 0; padding:24px; border:1px solid #b9d69033; border-radius:20px; background:#26392e; }
+.party-roster h2 { color:#e5f1c3; font-size:21px; }
+.party-roster>p,.party-roster small { color:#becdac; font-size:13px; line-height:1.8; }
+.party-roster>div { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin:18px 0; }
+.party-roster article { border:1px solid #c4d79a33; border-radius:14px; padding:16px; background:#1b2d23; overflow-wrap:anywhere; }
+.party-roster article.is-current { border-color:#b7e56e; }
+.party-roster article span,.party-roster article p { color:#bccca7; font-size:13px; line-height:1.6; }
+.party-roster h3 { font-size:22px; color:#e6f4c7; margin:9px 0; }
+.party-roster article strong { font-size:24px; color:#bded83; }
+.party-footer .battle-counter>span { font-size:18px; overflow-wrap:anywhere; }
+.party-footer .battle-recognition strong { font-size:clamp(24px,3vw,40px); overflow-wrap:anywhere; }
+.party-footer .party-actions { gap:6px; }
+.party-footer .party-actions button { font-size:13px; padding:8px 10px; }
+.party-footer .party-actions .primary-button { min-height:42px; }
+.party-footer .party-actions p { font-size:11px; }
+.party-footer .party-sound { margin-top:6px; }
+.party-footer .party-sound button { font-size:11px; padding:5px 8px; }
+.party-footer .party-result { padding:8px; margin:0; gap:5px; }
+.party-footer .party-result strong { font-size:20px; }
+.party-footer .party-result p { margin:0; font-size:11px; }
+.party-exit-dialog button { margin:8px; }
+@media(max-width:650px) { .party-setup { padding:18px; margin:24px 0; } .party-names { grid-template-columns:1fr; } .party-shell .topbar>span { display:none; } .party-wordmark { font-size:16px; } }
+@media(max-height:760px) and (min-width:761px) { .party-footer .party-actions p { display:none; } }
+@media(prefers-reduced-motion:reduce) { .party-shell .monster,.party-shell .monster-body { animation:none; } }
+.party-setup>.eyebrow { font-size:12px; line-height:1.6; letter-spacing:.5px; }
