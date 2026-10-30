@@ -8,8 +8,8 @@
   "workers_dev": false,
   "preview_urls": false,
   "vars": {
-    "PUBLIC_AI_ENABLED": "false",
-    "FREE_QUOTA_CONFIRMED": "false",
+    "PUBLIC_AI_ENABLED": "true",
+    "FREE_QUOTA_CONFIRMED": "true",
     "AI_PROVIDER": "bailian",
     "AI_MODEL": "qwen-flash",
     "AI_BASE_URL": "https://dashscope.aliyuncs.com/compatible-mode/v1",
@@ -17,9 +17,12 @@
     "QUIZ_DAILY_CALLS": "300",
     "QUIZ_SOURCE_DAILY_CALLS": "60",
     "QUIZ_SOURCE_MINUTE_CALLS": "10",
-    "QUIZ_BUDGET_CNY": "0",
+    "QUIZ_BUDGET_CNY": "5",
     "QUIZ_PRICE_PROVIDER": "bailian",
-    "QUIZ_PRICE_MODEL": "qwen-flash"
+    "QUIZ_PRICE_MODEL": "qwen-flash",
+    "QUIZ_INPUT_CNY_PER_MILLION": "0.15",
+    "QUIZ_OUTPUT_CNY_PER_MILLION": "1.5",
+    "QUIZ_PRICE_CHECKED_ON": "2026-10-30"
   },
   "durable_objects": {
     "bindings": [

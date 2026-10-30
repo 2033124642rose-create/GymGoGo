@@ -1,3 +1,5 @@
+> 正式开放准备更新（2026-10-30）：用户已授权启用AI及最高5元内部预留，真实冒烟最多2次、不自动重试；先预览验证再合并master。下文默认关闭值属于首次安全部署步骤。后续前端修改可按本地测试→Git提交→push master自动更新Pages；如果修改server/或cloudflare/，还需发布独立Worker，不能声称Pages推送会自动更新Worker。当前没有配置Worker的Git集成；为保持密钥安全，不把Wrangler OAuth上传GitHub。模型价格核对日期超过7天会停用，需本人重新核对价格后更新配置。
+
 # 以后如何更新并发布 GymGoGo
 
 本指南对应 D:\gymgogogo、master 分支、已有 GitHub 仓库和 gymgogo.pages.dev。命令是未来获得发布授权后由你执行的步骤，本轮没有执行提交、推送、部署或真实模型调用。
