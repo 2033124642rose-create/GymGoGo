@@ -54,13 +54,13 @@ export default function BattleResult({result,onReplay,immersive=false}:{result:B
     </div>
     {result.mode==='demo'&&<p className="result-demo">按钮演示结果 · 不代表真实训练，不调用 AI。</p>}
     <div className={`result-review ${aiReady?'is-ai-review':''}`} aria-live="polite" aria-busy={pending}>
-      <span className="review-source"><Sparkles size={14}/>{pending?'百炼 AI 正在创作…':aiReady?'百炼 AI 已生成':attempted?'本地备用战报 · 非 AI 生成':result.mode==='demo'?'按钮演示 · 本地通关摘要':'本局 AI 战报尚未生成'}</span>
-      {result.mode==='real'&&<div className="ai-invitation">
+      <span className="review-source"><Sparkles size={14}/>{pending?'百炼 AI 正在创作…':aiReady?'百炼 AI 已生成':attempted?'本地备用战报 · 非 AI 生成':result.mode==='demo'?'按钮演示 · 本地通关摘要':!import.meta.env.DEV?'本地通关摘要 · 非 AI 生成':'本局 AI 战报尚未生成'}</span>
+      {result.mode==='real'&&import.meta.env.DEV&&<div className="ai-invitation">
         {!attempted&&<><h3>这一局，值得 AI 专门写一页。</h3><p>将本局 {result.count} 次动作、{formatDuration(result.seconds)} 的冒险，写成一段有团子回应的专属战报。</p></>}
         <button className="result-ai" disabled={attempted||pending} onClick={()=>void requestReview()}><Sparkles size={17}/>{pending?'正在根据本局数据生成…':aiReady?'AI 战报已生成 · 本局不再重复调用':attempted?'未生成 AI · 已使用本地备用':'召唤 AI 战报 · 每局一次'}</button>
       </div>}
       {pending?<p className="ai-writing">正在用本局 {result.count} 次 / {formatDuration(result.seconds)} 创作称号、故事与团子回应，稍等片刻。</p>:
-        (attempted||result.mode==='demo')&&<><h3>「{review.title}」</h3><p>{review.review}</p>
+        (attempted||result.mode==='demo'||!import.meta.env.DEV)&&<><h3>「{review.title}」</h3><p>{review.review}</p>
           {aiReady&&review.monsterLine&&<blockquote className="monster-reply"><span>贪睡团子小声嘀咕</span>“{review.monsterLine}”</blockquote>}
           <small>{aiReady?`根据本局 ${result.count} 次 / ${formatDuration(result.seconds)} 生成 · AI 趣味叙事，仅供娱乐。`:'这是本地备用内容，不是大模型生成。'}</small>
         </>}

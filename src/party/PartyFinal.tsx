@@ -30,7 +30,8 @@ export default function PartyFinal({result,seconds,onClose,onExit}:{result:Party
     <div className="party-final-totals"><span>团队有效次数<strong>{result.teamTotal} 次</strong></span><span>通关关卡<strong>{result.completedLevels} / {PARTY_LEVELS.length}</strong></span><span>整场经过时间<strong>{formatDuration(seconds)}</strong><small>含轮换与休息</small></span></div>
     <div className="party-rewards" aria-label="已获得奖励">{result.rewards.map(reward=><span key={reward}><Trophy size={17}/>{reward}</span>)}</div>
     <div className="party-contribution-table"><table aria-label="最终全队贡献"><thead><tr><th>冒险者</th>{PARTY_LEVELS.map(level=><th key={level.id}>{level.name}</th>)}<th>合计</th><th>团队贡献</th></tr></thead><tbody>{result.players.map((player,index)=><tr key={player.id}><th><img src={HATS[player.hat].src} alt=""/>#{index+1} {player.name}</th>{player.counts.map((count,i)=><td key={i}>{count}</td>)}<td>{player.totalCount}</td><td>{result.teamTotal?(player.totalCount/result.teamTotal*100).toFixed(1):'0.0'}%</td></tr>)}</tbody></table></div>
-    <p className="party-final-note">贡献来自实际有效计数，百分比有四舍五入误差，不做速度排名。团队 AI 战报尚未开发，本页为本地确定性结算。</p>
+    <p className="party-final-note">贡献来自实际有效计数，百分比有四舍五入误差，不做速度排名。本页记录本场实际动作与获得的徽章。</p>
+    {result.failedAttempts.length>0&&<p className="party-final-note">上表统计成功闯关路线。失败尝试另外实际完成 {result.failedAttempts.reduce((sum,a)=>sum+a.counts.reduce((n,c)=>n+c,0),0)} 次，不重复用于当前Boss扣血。</p>}
     <div className="party-final-actions"><button ref={close} onClick={onClose}>回看战场</button><button className="primary-button" onClick={onExit}>返回单人模式</button></div>
   </section></div>
 }

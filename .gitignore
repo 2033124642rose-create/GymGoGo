@@ -1,5 +1,6 @@
 node_modules/
 .npm-cache/
+.local/
 public/mediapipe/
 dist/
 *.tsbuildinfo
@@ -7,7 +8,10 @@ coverage/
 .vercel/
 .env
 .env.*
+.env*
 !.env.example
+.dev.vars*
+.wrangler/
 *.local
 *.log
 .DS_Store

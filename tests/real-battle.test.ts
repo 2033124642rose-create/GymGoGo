@@ -16,6 +16,7 @@ class FakeWorker {
   reply(data:unknown){this.onmessage?.({data} as MessageEvent)}
 }
 beforeEach(()=>{
+  history.replaceState(null,'','/')
   FakeWorker.instances=[]
   Object.values(audio).forEach(fn=>fn.mockClear())
   audio.unlock.mockResolvedValue(true);audio.strike.mockReturnValue(true)
@@ -28,7 +29,7 @@ beforeEach(()=>{
   vi.spyOn(performance,'now').mockReturnValue(0)
   vi.stubGlobal('Worker',FakeWorker);vi.stubGlobal('OffscreenCanvas',class{});vi.stubGlobal('createImageBitmap',vi.fn())
 })
-afterEach(()=>{cleanup();vi.unstubAllGlobals()})
+afterEach(()=>{cleanup();vi.unstubAllGlobals();history.replaceState(null,'','/')})
 
 async function setup() {
   render(createElement(App))
@@ -173,6 +174,7 @@ describe('real landmark → squat → one attack integration (synthetic data, no
     expect(document.querySelector('.ready-overlay')).toBeNull();expect(countText()).toContain('0 / 10')
   })
   it('shows the actual blocking joint and standing progress in the developer panel',async()=>{
+    history.replaceState(null,'','/?debug=1')
     const s=await setup();await s.prepare()
     fireEvent.click(screen.getByRole('button',{name:'就位调试'}))
     const frame=s.sequence.hold(175,0,100)[0];frame.landmarks[27].visibility=.45;s.feed([frame])

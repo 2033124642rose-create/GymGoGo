@@ -1,3 +1,4 @@
+import { ProductHero, ProductGuide } from './product/ProductIntro'
 import { Monster, ForestBackdrop } from './game/ForestScene'
 import PartyGame from './party/PartyGame'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -13,7 +14,7 @@ import ReadyDebug from './game/ReadyDebug'
 import SquatDebug from './squat/SquatDebug'
 import BattleResult from './settlement/BattleResult'
 import type { BattleSummary } from './settlement/review'
-import { ArrowRight, Camera, Check, ChevronRight, CircleHelp, Clock3, Flag, Heart, Leaf, LockKeyhole, Play, RotateCcw, ShieldCheck, Sparkles, Swords, Trophy, X, Zap } from 'lucide-react'
+import { ArrowRight, Check, ChevronRight, CircleHelp, Clock3, Flag, Heart, Leaf, LockKeyhole, Play, RotateCcw, ShieldCheck, Swords, Trophy, X, Zap } from 'lucide-react'
 
 const TARGET = 10
 
@@ -188,22 +189,23 @@ export default function App() {
 
   return <div className="app-shell">
     <header className="topbar">
-      <a className="brand" href="#main" aria-label="GymGoGo 首页"><span className="brand-mark"><Zap fill="currentColor" size={25}/></span><span>Gym<span className="brand-go">GoGo</span><small>AI 健身冒险家</small></span></a>
-      <div className="header-center"><span className="green-dot"/> 今天也要，为自己升级。</div>
+      <a className="brand" href="#main" aria-label="GymGoGo 首页"><span className="brand-mark"><Zap fill="currentColor" size={25}/></span><span>Gym<span className="brand-go">GoGo</span><small>AI 体感派对游戏</small></span></a>
+      <div className="header-center"><span className="green-dot"/> 朋友到齐，冒险开始。</div>
       <button className="help-button" onClick={() => { reset(); setPartyMode(true) }}>创建本地派对</button>
       <button ref={helpButton} className="help-button" onClick={() => setHelp(true)}><CircleHelp size={17}/> 玩法说明</button>
     </header>
 
     <main id="main">
-      <div className="page-heading"><div><div className="eyebrow"><Leaf size={15}/> GYM GOGO · 森林冒险启程</div><h1>把每一次深蹲，<span>变成一次冒险。</span></h1><p>营地已经点亮，森林里的小团子还在打盹。<br className="hero-mobile-break"/>动一动，开启属于你的第一场冒险。</p></div><span className="prototype-tag"><span/> 第四阶段 · 森林战报与体验优化 · 待真人验收</span></div>
+      <ProductHero onStart={() => { reset(); setPartyMode(true) }}/>
+      <div className="solo-heading"><span>一个人，也能出发</span><h2>单人体感挑战</h2><p>先和森林团子过过招：10 次深蹲完成单人挑战。想玩三关合作与知识问答？点击「立即开始」创建派对。</p></div>
 
       <div ref={battleRoot} className={`game-layout ${battleImmersive ? 'is-battle-immersive' : ''}`}
         role={battleImmersive ? 'dialog' : undefined} aria-modal={battleImmersive ? true : undefined}
         aria-label={battleImmersive ? '沉浸式游戏战斗模式' : undefined}>
-        {import.meta.env.DEV && mode==='real' && <ReadyDebug gate={readyGate.current} gameState={`${ready.phase} / ${phase} / 深蹲 ${squat.phase}`} recognized={recognition.kind==='tracked'}/>}
-        {import.meta.env.DEV && mode==='real' && phase!=='idle' && <SquatDebug counter={counter.current}/>}
+        {import.meta.env.DEV && new URLSearchParams(window.location.search).get('debug')==='1' && mode==='real' && <ReadyDebug gate={readyGate.current} gameState={`${ready.phase} / ${phase} / 深蹲 ${squat.phase}`} recognized={recognition.kind==='tracked'}/>}
+        {import.meta.env.DEV && new URLSearchParams(window.location.search).get('debug')==='1' && mode==='real' && phase!=='idle' && <SquatDebug counter={counter.current}/>}
         <section className={`arena ${hit ? 'arena-hit' : ''}`} aria-label="深蹲挑战游戏区域">
-          <div className="arena-top"><span className="level-badge"><Flag size={14}/> LEVEL 01</span><span className="world-name"><Leaf size={14}/> 萌芽森林 <ChevronRight size={13}/> 初次相遇</span><span className="demo-badge">{mode==='real'?'REAL · BETA':'DEMO'}</span></div>
+          <div className="arena-top"><span className="level-badge"><Flag size={14}/> LEVEL 01</span><span className="world-name"><Leaf size={14}/> 萌芽森林 <ChevronRight size={13}/> 初次相遇</span><span className="demo-badge">{mode==='real'?'体感挑战':'按钮体验'}</span></div>
           <div className="arena-title"><h2>深蹲挑战</h2><p>第一站 · 唤醒森林里的贪睡团子</p></div>
           <div className="monster-health"><div><span><span className="monster-dot"/> 贪睡团子 <small>森林守门员</small></span><strong>{hp}<span> / 100 HP</span></strong></div><div className="health-track" role="progressbar" aria-label="怪兽生命值" aria-valuemin={0} aria-valuemax={100} aria-valuenow={hp}><div style={{width: `${hp}%`}}/></div></div>
           <div className="scene">
@@ -248,18 +250,10 @@ export default function App() {
         {result&&<BattleResult key={result.roundId} result={result} onReplay={start} immersive={battleImmersive}/>}
       </div>
 
-      <section className="how-it-works" aria-label="冒险指南">
-        <div className="guide-title"><span className="guide-icon"><Sparkles size={25}/></span><div><span className="guide-kicker">冒险新手村 · 正式玩法预告</span><h2>小动作，大冒险</h2><p>三步出发，快乐升级。</p></div></div>
-        {[
-          { icon: Camera, title: '准备好你的空间', text: '腾出一小块冒险地，让全身进入镜头。', label: '准备出发' },
-          { icon: Swords, title: '用动作发起攻击', text: '蹲一下，出招！让团子的血条一点点下降。', label: '释放能量' },
-          { icon: Trophy, title: '收获你的通关时刻', text: '达成小目标，把今天的成就感收入囊中。', label: '快乐升级' },
-        ].map((step, i) => <div className={`guide-step guide-step-${i + 1}`} key={step.title}><div className="step-top"><span className="step-icon"><step.icon size={23}/></span><span className="step-number">0{i + 1}</span></div><div><h3>{step.title}</h3><p>{step.text}</p></div><span className="step-label">{step.label}<ArrowRight size={14}/></span></div>)}
-      </section>
-      <div className="demo-notice"><Sparkles size={15}/><span>第四阶段测试版：真实挑战通关后可主动召唤 AI 战报，每局一次；未配置服务或请求失败时使用本地评价。按钮演示不会调用 AI。</span></div>
+      <ProductGuide/>
     </main>
     <footer><span>GymGoGo <span className="footer-dot">·</span> 让运动多一点好玩。</span><span>MADE FOR YOUR NEXT LITTLE WIN <Heart size={12}/></span></footer>
 
-    {help && <div className="modal-overlay" onClick={() => { setHelp(false); helpButton.current?.focus() }}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e=>e.stopPropagation()}><button ref={closeButton} className="close-button" aria-label="关闭玩法说明" onClick={() => { setHelp(false); helpButton.current?.focus() }}><X size={21}/></button><span className="modal-icon"><Swords size={27}/></span><div className="eyebrow">YOUR FIRST ADVENTURE</div><h2 id="help-title">先来一场小小的冒险</h2><p>当前有两种独立模式：真实深蹲与按钮演示。切换模式会清空本局。</p><ol><li>点击「开启摄像头」并亲自授权，全身入镜后可查看关键点。随时点击关闭即可停止采集。</li><li>真实模式点击「准备挑战」后再走远就位。主要关节入镜并连续识别约 2 秒，保持姿态等待 3 秒倒计时结束，再完成深蹲。倒计时离开画面会重新等待；随时可取消准备。</li><li>按钮演示中点击「模拟完成一次深蹲」触发攻击，真实动作不会增加模拟次数。两种模式均完成 10 次后通关。</li></ol><div className="modal-note"><ShieldCheck size={18}/> 原始视频仅本地处理，不录制、不上传；真实计数为初版规则，待真人验收，不做精准姿势诊断。</div></section></div>}
+    {help && <div className="modal-overlay" onClick={() => { setHelp(false); helpButton.current?.focus() }}><section className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={e=>e.stopPropagation()}><button ref={closeButton} className="close-button" aria-label="关闭玩法说明" onClick={() => { setHelp(false); helpButton.current?.focus() }}><X size={21}/></button><span className="modal-icon"><Swords size={27}/></span><div className="eyebrow">YOUR FIRST ADVENTURE</div><h2 id="help-title">先来一场小小的冒险</h2><p>和朋友玩：创建 2–6 人派对，输入昵称并选择帽子。三关每人分别完成 2、3、4 次深蹲；启用 AI 后还需每人每关答对一道题。一个人玩：下方单人挑战目标为 10 次，也提供明确标注的按钮演示。</p><ol><li>点击「开启摄像头」并亲自授权，全身入镜后可查看关键点。随时点击关闭即可停止采集。</li><li>真实模式点击「准备挑战」后再走远就位。主要关节入镜并连续识别约 2 秒，保持姿态等待 3 秒倒计时结束，再完成深蹲。倒计时离开画面会重新等待；随时可取消准备。</li><li>按钮演示中点击「模拟完成一次深蹲」触发攻击，真实动作不会增加模拟次数。两种模式均完成 10 次后通关。</li></ol><div className="modal-note"><ShieldCheck size={18}/> 原始视频仅本地处理，不录制、不上传；不做精准姿势诊断。AI 答题只发送题目与文字答案等必要信息，服务可用性以派对页提示为准。</div></section></div>}
   </div>
 }

@@ -9,6 +9,7 @@ export interface CuePlayer {
   silence(): void
   dispose(): void
 }
+export interface CueVoiceOptions {voiceURI?:string;rate?:number;pitch?:number;words?:Partial<Record<FeedbackCue,string>>}
 const SPOKEN: Record<FeedbackCue, string> = {
   tracked: '识别成功', waiting: '请让全身进入画面',
   partial: '请调整站位，让全身进入画面', lost: '未检测到人体，请回到画面',
@@ -28,9 +29,9 @@ export class LocalCuePlayer implements CuePlayer {
   private generation = 0
   private voicesChanged = () => {
     if (!this.disposed && !this.utterance && this.localVoice())
-      this.onMode('ready', '本地中文语音已加载，请点击「测试语音」确认声音。')
+      this.onMode('ready', '本地中文语音已加载，请点击「语音试听」确认声音。')
   }
-  constructor(private onMode: (mode: SoundMode, detail?: string) => void) {
+  constructor(private onMode: (mode: SoundMode, detail?: string) => void,private profile?:()=>CueVoiceOptions|undefined) {
     window.speechSynthesis?.addEventListener?.('voiceschanged', this.voicesChanged)
     this.localVoice() // Some browsers load the list asynchronously after the first query.
   }
@@ -48,12 +49,12 @@ export class LocalCuePlayer implements CuePlayer {
     } catch { /* Speech can still work independently of Web Audio. */ }
     const mode: SoundMode = this.localVoice() ? 'ready' : this.context?.state === 'running' ? 'tone' :
       this.context ? 'blocked' : 'unsupported'
-    if (!this.disposed && !this.utterance) this.onMode(mode, mode === 'tone' ? '未检测到本地中文语音，暂用提示音；可稍后点击「测试语音」重试。' : undefined)
+    if (!this.disposed && !this.utterance) this.onMode(mode, mode === 'tone' ? '未检测到本地中文语音，暂用提示音；可稍后点击「语音试听」重试。' : undefined)
     return mode
   }
   private localVoice() {
     if (typeof window.SpeechSynthesisUtterance === 'undefined' || !window.speechSynthesis) return undefined
-    try { return findLocalChineseVoice(window.speechSynthesis.getVoices()) } catch { return undefined }
+    try { const voices=window.speechSynthesis.getVoices(),uri=this.profile?.()?.voiceURI;return (uri?voices.find(v=>v.localService&&v.voiceURI===uri):undefined)||findLocalChineseVoice(voices) } catch { return undefined }
   }
   testVoice() {
     if (this.disposed) return
@@ -68,12 +69,14 @@ export class LocalCuePlayer implements CuePlayer {
     if (this.disposed) return
     this.silence()
     const voice = this.localVoice()
-    if (!voice) { this.tone(status, '未检测到本地中文语音，暂用提示音；请稍后测试或检查系统中文语音包。'); return }
-    const utterance = new SpeechSynthesisUtterance(sample ? '语音提示已开启，识别成功后会提醒你' : SPOKEN[status])
+    if (!voice) { this.tone(status, '未检测到本地中文语音，暂用提示音；请稍后试听或检查系统中文语音包。'); return }
+    const profile=this.profile?.()
+    const utterance = new SpeechSynthesisUtterance(sample ? '语音提示已开启，识别成功后会提醒你' : profile?.words?.[status]||SPOKEN[status])
     this.utterance = utterance
     utterance.voice = voice
     utterance.lang = voice.lang
-    utterance.rate = 1.05
+    utterance.rate = profile?.rate??1.05
+    utterance.pitch = profile?.pitch??1
     utterance.volume = 1
     const fail = (reason: string) => {
       if (this.utterance !== utterance) return
@@ -91,17 +94,17 @@ export class LocalCuePlayer implements CuePlayer {
       if (this.utterance === utterance) { clearTimeout(this.startTimer); this.utterance = null }
     }
     utterance.onerror = event => fail(event.error === 'not-allowed' ?
-      '浏览器阻止了语音，请点击「测试语音」重新启用；暂用提示音。' :
-      '中文语音播放失败，暂用提示音；请点击「测试语音」重试。')
+      '浏览器阻止了语音，请点击「语音试听」重新启用；暂用提示音。' :
+      '中文语音播放失败，暂用提示音；请点击「语音试听」重试。')
     this.onMode('starting', '正在等待中文语音启动…')
-    this.startTimer = setTimeout(() => fail('中文语音未能启动，暂用提示音；请点击「测试语音」重试。'), 2500)
+    this.startTimer = setTimeout(() => fail('中文语音未能启动，暂用提示音；请点击「语音试听」重试。'), 2500)
     try { window.speechSynthesis.speak(utterance) }
-    catch { fail('中文语音启动失败，暂用提示音；请点击「测试语音」重试。') }
+    catch { fail('中文语音启动失败，暂用提示音；请点击「语音试听」重试。') }
   }
   private tone(status: FeedbackCue, detail: string) {
     const context = this.context
     if (!context || context.state !== 'running') {
-      this.onMode(context ? 'blocked' : 'unsupported', `${detail} 提示音也不可用，请点击「测试语音」启用或查看屏幕状态。`)
+      this.onMode(context ? 'blocked' : 'unsupported', `${detail} 提示音也不可用，请点击「语音试听」启用或查看屏幕状态。`)
       return
     }
     try {
@@ -122,7 +125,7 @@ export class LocalCuePlayer implements CuePlayer {
         }
       })
       this.onMode('tone', detail)
-    } catch { this.onMode('blocked', '语音和提示音暂时不可用，请点击「测试语音」重试或查看屏幕状态。') }
+    } catch { this.onMode('blocked', '语音和提示音暂时不可用，请点击「语音试听」重试或查看屏幕状态。') }
   }
   silence() {
     this.generation++

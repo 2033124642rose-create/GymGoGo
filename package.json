@@ -12,7 +12,8 @@
     "postinstall": "npm run prepare:vision",
     "predev": "npm run prepare:vision",
     "prebuild": "npm run prepare:vision",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:cloud": "node scripts/check-cloud.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "1.2.0",
@@ -26,9 +27,12 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "esbuild": "^0.28.2",
     "jsdom": "^26.1.0",
+    "miniflare": "^5.20261023.3-beta",
     "typescript": "~5.9.3",
     "vite": "^7.1.0",
-    "vitest": "^3.2.7"
+    "vitest": "^3.2.7",
+    "wrangler": "^4.156.0"
   }
 }

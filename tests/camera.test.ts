@@ -15,9 +15,10 @@ function setup(getMedia?: CameraEnvironment['getMedia']) {
     getFrame: vi.fn().mockResolvedValue(bitmap), schedule: vi.fn(() => 1), cancel: vi.fn(), now: () => 1000,
   }
   const onState = vi.fn()
-  const controller = new CameraController(video, canvas, onState, env)
+  const onPose=vi.fn()
+  const controller = new CameraController(video, canvas, onState, env,onPose)
   const reply = (data: unknown) => worker.onmessage?.({ data } as MessageEvent)
-  return { controller, env, video, canvas, track, stream, worker, bitmap, reply }
+  return { controller, env, video, canvas, track, stream, worker, bitmap, reply,onPose }
 }
 
 beforeEach(() => {
@@ -136,3 +137,26 @@ describe('camera session ownership and privacy cleanup', () => {
     controller.stop()
   })
 })
+
+
+describe('inference standby without reacquiring camera',()=>{
+ it('stops captures, drops late replies and resumes the same worker/stream',async()=>{
+  const s=setup();await s.controller.start();s.reply({type:'ready'});
+  s.controller.setInferencePaused(true);s.onPose.mockClear();
+  const callback=vi.mocked(s.env.schedule).mock.calls.at(-1)![0];callback(1000);
+  s.reply({type:'result',timestamp:900,landmarks:[]});
+  expect(s.env.getFrame).not.toHaveBeenCalled();expect(s.onPose).not.toHaveBeenCalled();
+  expect(s.track.stop).not.toHaveBeenCalled();expect(s.worker.terminate).not.toHaveBeenCalled();
+  s.controller.setInferencePaused(false);s.onPose.mockClear();
+  s.reply({type:'result',timestamp:900,landmarks:[]});expect(s.onPose).not.toHaveBeenCalled();
+  vi.mocked(s.env.schedule).mock.calls.at(-1)![0](1000);await Promise.resolve();
+  expect(s.env.getFrame).toHaveBeenCalledTimes(1);expect(s.env.getMedia).toHaveBeenCalledTimes(1);
+  s.controller.stop();
+ });
+ it('discards a bitmap captured before standby even if it resolves after resume',async()=>{
+  const s=setup();let finish!:(v:ImageBitmap)=>void;vi.mocked(s.env.getFrame).mockImplementation(()=>new Promise(r=>{finish=r}));
+  await s.controller.start();s.reply({type:'ready'});vi.mocked(s.env.schedule).mock.calls.at(-1)![0](1000);
+  s.controller.setInferencePaused(true);s.controller.setInferencePaused(false);finish(s.bitmap);await Promise.resolve();
+  expect(s.bitmap.close).toHaveBeenCalled();expect(vi.mocked(s.worker.postMessage).mock.calls.some(c=>(c[0] as {type:string}).type==='frame')).toBe(false);s.controller.stop();
+ });
+});

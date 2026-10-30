@@ -109,7 +109,7 @@ describe('party first level UI + real counter + existing camera integration (syn
     const video=screen.getByLabelText('本地摄像头实时画面')
     await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'战斗大屏'}))})
     expect(screen.getByRole('dialog',{name:'沉浸式游戏战斗模式'})).toBeTruthy()
-    expect(screen.getByRole('button',{name:'测试语音'})).toBeTruthy()
+    expect(screen.getByRole('button',{name:'语音试听'})).toBeTruthy()
     expect(screen.getByText('当前玩家 · #1 测试甲')).toBeTruthy()
     fireEvent.click(screen.getByRole('button',{name:'退出大屏'}))
     expect(screen.getByLabelText('本地摄像头实时画面')).toBe(video)

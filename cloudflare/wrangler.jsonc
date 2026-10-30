@@ -1,0 +1,40 @@
+{
+  "name": "gymgogo-quiz-service",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-30",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": {
+    "PUBLIC_AI_ENABLED": "false",
+    "FREE_QUOTA_CONFIRMED": "false",
+    "AI_PROVIDER": "bailian",
+    "AI_MODEL": "qwen-flash",
+    "AI_BASE_URL": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "QUIZ_APPROVED_CALLS": "1000",
+    "QUIZ_DAILY_CALLS": "300",
+    "QUIZ_SOURCE_DAILY_CALLS": "60",
+    "QUIZ_SOURCE_MINUTE_CALLS": "10",
+    "QUIZ_BUDGET_CNY": "0",
+    "QUIZ_PRICE_PROVIDER": "bailian",
+    "QUIZ_PRICE_MODEL": "qwen-flash"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "QUIZ_BUDGET",
+        "class_name": "QuizBudget"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "QuizBudget"
+      ]
+    }
+  ]
+}

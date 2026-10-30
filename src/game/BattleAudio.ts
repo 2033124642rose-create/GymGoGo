@@ -39,6 +39,8 @@ export class BattleAudio {
     return impact
   }
   countdown() {return this.note(660,660,.09)}
+  quizSuccess() {this.note(784,784,.09,0,'sine',.06);this.note(1046,1046,.13,.11,'sine',.06)}
+  quizFailure() {this.note(220,110,.16,0,'triangle',.06);this.note(100,65,.12,.12,'sine',.045)}
   victory() { [523,659,784,1046].forEach((pitch,i)=>this.note(pitch,pitch,.2,.14+i*.13,'sine',.09)) }
   silence() {this.nodes.forEach(node=>{try{node.stop()}catch{/* already ended */}});this.nodes=[]}
   dispose() {this.silence();if(this.context)void this.context.close().catch(()=>{});this.context=null}

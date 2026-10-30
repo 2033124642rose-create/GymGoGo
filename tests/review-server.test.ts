@@ -8,6 +8,14 @@ const ai={title:'森林节奏大师',review:'团子刚把门牌翻到营业，�
 const reply=()=>new Response(JSON.stringify({choices:[{message:{content:JSON.stringify(ai)}}]}))
 afterEach(()=>vi.useRealTimers())
 describe('server-only Bailian review and bounded fallback',()=>{
+  it('uses the same configured adapter for reviews without leaking server credentials',async()=>{
+    const fetchImpl=vi.fn(async()=>reply()),service=createReviewService({env:{AI_PROVIDER:'openai-compatible',AI_BASE_URL:'https://models.example.com/v1',AI_ALLOWED_HOSTS:'models.example.com',AI_API_KEY:'fixture-review-key',AI_MODEL:'example-model'},fetchImpl})
+    const result=await service.evaluate(round)
+    expect(result).toMatchObject({source:'ai',receipt:{model:'example-model'}})
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect(JSON.stringify(result)).not.toContain('fixture-review-key')
+    expect(JSON.parse(String((fetchImpl.mock.calls[0] as unknown as [string,RequestInit])[1].body))).not.toHaveProperty('enable_thinking')
+  })
   it('uses local fallback without any call when the server key is missing',async()=>{
     const fetchImpl=vi.fn(),service=createReviewService({env:{},fetchImpl})
     expect(await service.evaluate(round)).toMatchObject({source:'local'});expect(fetchImpl).not.toHaveBeenCalled()

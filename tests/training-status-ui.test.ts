@@ -8,6 +8,7 @@ import { LocalCuePlayer } from '../src/camera/trainingFeedback'
 const testSession = vi.hoisted(() => ({ update: undefined as ((state: CameraState) => void) | undefined }))
 vi.mock('../src/camera/CameraController', () => ({ CameraController: class {
   constructor(_video: unknown, _canvas: unknown, onState: (state: CameraState) => void) { testSession.update = onState }
+  setInferencePaused(_paused:boolean) {}
   stop() {}
   start() {}
 } }))
@@ -55,7 +56,7 @@ describe('voice entry and confirmed game cues',()=>{
   it('offers a voice test on the normal page without asking for a camera or microphone',()=>{
     const test=vi.spyOn(LocalCuePlayer.prototype,'testVoice').mockImplementation(()=>{})
     render(createElement(CameraCamp))
-    fireEvent.click(screen.getByRole('button',{name:'测试语音'}))
+    fireEvent.click(screen.getByRole('button',{name:'语音试听'}))
     expect(test).toHaveBeenCalledOnce()
     expect(screen.getByRole('button',{name:'语音提示：开'})).toBeTruthy()
     expect(screen.getByText(/无需开启麦克风/)).toBeTruthy()

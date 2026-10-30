@@ -139,3 +139,5 @@
 .training-voice-status { color:#e5edc2; font-size:13px; line-height:1.65; margin:8px 0 0; }
 .is-battle-immersive .camera-toggle,.is-battle-immersive .camera-stop,.is-immersive .camera-toggle,.is-immersive .camera-stop { flex-basis:auto; }
 .is-battle-immersive .training-voice-status { font-size:12px; }
+
+.camp-standby{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:radial-gradient(ellipse,#365436,#172c24);color:#e1efb9;text-align:center;padding:18px}.camp-standby strong{font-size:clamp(24px,3vw,42px)}.camp-standby span{font-size:16px}

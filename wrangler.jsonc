@@ -1,0 +1,27 @@
+{
+  "name": "gymgogo",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-10-30",
+  "vars": {
+    "PUBLIC_AI_ENABLED": "false"
+  },
+  "services": [
+    {
+      "binding": "QUIZ_SERVICE",
+      "service": "gymgogo-quiz-service"
+    }
+  ],
+  "env": {
+    "preview": {
+      "vars": {
+        "PUBLIC_AI_ENABLED": "false"
+      },
+      "services": [
+        {
+          "binding": "QUIZ_SERVICE",
+          "service": "gymgogo-quiz-service"
+        }
+      ]
+    }
+  }
+}

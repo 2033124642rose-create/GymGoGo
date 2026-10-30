@@ -62,6 +62,25 @@ export class CameraController {
   private lastCapture = -Infinity
   private interval = 1000 / 15
   private hasSeen = false
+  private inferencePaused = false
+  private inferenceEpoch = 0
+  private resumeAfter = -Infinity
+  setInferencePaused(paused: boolean) {
+    if (this.inferencePaused === paused) return
+    this.inferencePaused = paused; this.inferenceEpoch++
+    this.env.cancel(this.animation)
+    if (this.state.phase === 'running') clearTimeout(this.watchdog)
+    this.hasSeen = false; this.candidate = 'waiting'; this.candidateCount = 0
+    this.lastFrameTime = -1; this.lastCapture = -Infinity
+    this.canvas.getContext('2d')?.clearRect(0,0,this.canvas.width,this.canvas.height)
+    this.onPose?.(null)
+    if (!paused && this.state.phase === 'running') {
+      this.resumeAfter = this.env.now()
+      this.update({tracking:'waiting',groups:{...EMPTY_GROUPS}})
+      if (this.inFlight) this.watchdog = setTimeout(()=>this.fail('姿态识别恢复超时，请重新开启摄像头。'),10000)
+      this.animation = this.env.schedule(()=>this.tick(this.generation))
+    }
+  }
   private candidate: Tracking = 'waiting'
   private candidateCount = 0
   private ended = () => this.fail('摄像头连接已中断或系统权限已撤回。请检查设备后重新开启。')
@@ -99,9 +118,10 @@ export class CameraController {
         clearTimeout(this.watchdog)
         if (data.type === 'ready') {
           this.update({ phase: 'running', tracking: 'waiting', message: '', backend: data.backend })
-          this.animation = this.env.schedule(() => this.tick(generation))
+          if (!this.inferencePaused) this.animation = this.env.schedule(() => this.tick(generation))
         } else if (data.type === 'result') {
           this.inFlight = false
+          if (this.inferencePaused || (data.timestamp ?? -Infinity) < this.resumeAfter) return
           this.interval = Math.max(1000 / 15, Math.min(250, (data.inferenceMs ?? 0) * 1.15))
           const points = data.landmarks ?? []
           drawPose(this.canvas, points)
@@ -127,7 +147,7 @@ export class CameraController {
   }
 
   private tick(generation: number) {
-    if (generation !== this.generation || this.state.phase !== 'running') return
+    if (generation !== this.generation || this.state.phase !== 'running' || this.inferencePaused) return
     this.animation = this.env.schedule(() => this.tick(generation))
     const now = this.env.now()
     if (this.inFlight || this.video.readyState < 2 || this.video.videoWidth === 0 ||
@@ -136,8 +156,13 @@ export class CameraController {
     this.lastFrameTime = this.video.currentTime
     this.lastCapture = now
     this.watchdog = setTimeout(() => this.fail('姿态识别响应超时，摄像头已关闭。请关闭其他高负载应用后重试。'), 10_000)
+    const epoch = this.inferenceEpoch
     void this.env.getFrame(this.video).then(frame => {
-      if (generation !== this.generation || !this.worker) { frame.close(); return }
+      if (generation !== this.generation || !this.worker || this.inferencePaused || epoch !== this.inferenceEpoch) {
+        frame.close()
+        if(generation===this.generation){this.inFlight = false;clearTimeout(this.watchdog)}
+        return
+      }
       // Assigning canvas dimensions clears it; do this only when the source resolution changes.
       if (this.canvas.width !== frame.width) this.canvas.width = frame.width
       if (this.canvas.height !== frame.height) this.canvas.height = frame.height
@@ -148,7 +173,8 @@ export class CameraController {
         throw error
       }
     }).catch(() => {
-      if (generation === this.generation) this.fail('无法读取摄像头画面，摄像头已关闭。请使用新版 Chrome / Edge 后重试。')
+      if(generation===this.generation&&epoch!==this.inferenceEpoch){this.inFlight=false;clearTimeout(this.watchdog);return}
+      if (generation === this.generation && epoch === this.inferenceEpoch) this.fail('无法读取摄像头画面，摄像头已关闭。请使用新版 Chrome / Edge 后重试。')
     })
   }
 

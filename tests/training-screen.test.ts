@@ -106,7 +106,7 @@ describe('immersive mode retains the original camera session', () => {
     const mute = screen.getByRole('button', { name: '语音提示：开' })
     fireEvent.click(mute)
     expect(screen.getByRole('button', { name: '语音提示：关' }).getAttribute('aria-pressed')).toBe('false')
-    const test = screen.getByRole('button', { name: '测试语音' })
+    const test = screen.getByRole('button', { name: '语音试听' })
     test.focus(); fireEvent.keyDown(window, { key: 'Tab' })
     expect(document.activeElement).toBe(screen.getByRole('button', { name: '系统全屏' }))
     fireEvent.click(screen.getByRole('button', { name: '退出大屏' }))
