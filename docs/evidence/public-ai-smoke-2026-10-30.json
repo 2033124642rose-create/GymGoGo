@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-30",
+  "environment": "Cloudflare Preview",
+  "model": "qwen-flash",
+  "question": "运动前动态拉伸的主要目的是什么？",
+  "verdict": "correct",
+  "monsterReaction": "哼，这题我认输啦~",
+  "modelRequests": 2,
+  "ledgerBefore": 0,
+  "ledgerAfter": 2,
+  "reservedCny": 0.0042,
+  "limits": {
+    "total": 1000,
+    "daily": 300,
+    "sourceDaily": 60,
+    "sourceMinute": 10
+  },
+  "note": "真实授权冒烟，金额为内部预留而非账单；无密钥或身份凭据。"
+}
